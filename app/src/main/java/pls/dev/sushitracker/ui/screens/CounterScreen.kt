@@ -1,6 +1,7 @@
 package pls.dev.sushitracker.ui.screens
 
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -42,8 +43,47 @@ fun CounterScreen(onBack: () -> Unit, colors: SushiColors) {
     var counts by remember {
         mutableStateOf(SUSHI_PIECES.associate { it.id to 0 })
     }
+    var showExitDialog by remember { mutableStateOf(false) }
 
     val totalPieces = counts.values.sum()
+
+    BackHandler(enabled = true) {
+        if (phase != CounterPhase.RESTAURANT_INPUT && totalPieces > 0) {
+            showExitDialog = true
+        } else {
+            onBack()
+        }
+    }
+
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitDialog = false },
+            containerColor = colors.surface,
+            title = {
+                Text(
+                    "¿Salir de la sesión?",
+                    color = colors.onSurface,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    "Si sales ahora perderás el progreso actual.",
+                    color = colors.mutedForeground
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = onBack) {
+                    Text("Salir", color = colors.primary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExitDialog = false }) {
+                    Text("Continuar", color = colors.mutedForeground)
+                }
+            }
+        )
+    }
 
     when (phase) {
         CounterPhase.RESTAURANT_INPUT -> {
@@ -152,7 +192,9 @@ fun CounterScreen(onBack: () -> Unit, colors: SushiColors) {
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         IconButton(
-                            onClick = onBack,
+                            onClick = {
+                                if (totalPieces > 0) showExitDialog = true else onBack()
+                            },
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
