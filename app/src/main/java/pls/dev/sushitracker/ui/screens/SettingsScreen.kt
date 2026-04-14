@@ -1,7 +1,6 @@
 package pls.dev.sushitracker.ui.screens
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -26,16 +25,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import pls.dev.sushitracker.data.*
 import pls.dev.sushitracker.ui.theme.*
-import kotlinx.coroutines.launch
+import pls.dev.sushitracker.utils.ExportUtils
+import java.util.UUID
 
 @RequiresApi(Build.VERSION_CODES.O)
+@SuppressLint("DefaultLocale")
 @Composable
 fun SettingsScreen(
     colors: SushiColors,
+    strings: AppStrings.Strings,
     currentTheme: AppTheme,
+    currentLanguage: AppLanguage,
     onThemeChange: (AppTheme) -> Unit,
+    onLanguageChange: (AppLanguage) -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -44,7 +49,9 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
 
     var showResetDialog by remember { mutableStateOf(false) }
-    var showExportOptions by remember { mutableStateOf(false) }
+    var showExportDialog by remember { mutableStateOf(false) }
+    var showCustomPiecesDialog by remember { mutableStateOf(false) }
+    var customPieces by remember { mutableStateOf(settingsManager.getCustomPieces()) }
 
     Column(
         modifier = Modifier
@@ -60,20 +67,17 @@ fun SettingsScreen(
         ) {
             IconButton(
                 onClick = onBack,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(colors.secondary)
+                modifier = Modifier.size(40.dp).clip(CircleShape).background(colors.secondary)
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Volver",
+                    contentDescription = strings.back,
                     tint = colors.onSecondary,
                     modifier = Modifier.size(20.dp)
                 )
             }
             Text(
-                text = "Ajustes",
+                text = strings.settingsTitle,
                 color = colors.onBackground,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold,
@@ -82,39 +86,22 @@ fun SettingsScreen(
         }
 
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(bottom = 24.dp)
+            contentPadding = PaddingValues(bottom = 32.dp)
         ) {
+            // ── APARIENCIA
             item {
-                Text(
-                    text = "Apariencia",
-                    color = colors.mutedForeground,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
+                SectionLabel(strings.appearance, colors)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = colors.surface)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Tema de la app",
-                            color = colors.onSurface,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        Text(strings.appTheme, color = colors.onSurface, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                         Spacer(modifier = Modifier.height(12.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             AppTheme.entries.forEach { theme ->
                                 ThemeOption(
                                     theme = theme,
@@ -129,15 +116,33 @@ fun SettingsScreen(
                 }
             }
 
+            // ── IDIOMA
             item {
-                Text(
-                    text = "Tus datos",
-                    color = colors.mutedForeground,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
+                SectionLabel(strings.language, colors)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = colors.surface)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            AppLanguage.entries.forEach { lang ->
+                                LanguageOption(
+                                    language = lang,
+                                    isSelected = currentLanguage == lang,
+                                    colors = colors,
+                                    onClick = { onLanguageChange(lang) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
+            // ── TUS DATOS
+            item {
+                SectionLabel(strings.yourData, colors)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -146,21 +151,24 @@ fun SettingsScreen(
                     Column {
                         SettingsItem(
                             icon = Icons.Filled.Share,
-                            title = "Exportar estadisticas",
-                            subtitle = "Comparte tus datos como texto o JSON",
+                            title = strings.exportStats,
+                            subtitle = strings.exportStatsSubtitle,
                             colors = colors,
-                            onClick = { showExportOptions = true }
+                            onClick = { showExportDialog = true }
                         )
-
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            color = colors.border
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = colors.border)
+                        SettingsItem(
+                            icon = Icons.Filled.Add,
+                            title = strings.customPiecesManage,
+                            subtitle = strings.customPiecesSubtitle,
+                            colors = colors,
+                            onClick = { showCustomPiecesDialog = true }
                         )
-
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = colors.border)
                         SettingsItem(
                             icon = Icons.Filled.Delete,
-                            title = "Borrar todos los datos",
-                            subtitle = "Elimina todo tu historial",
+                            title = strings.deleteAll,
+                            subtitle = strings.deleteAllSubtitle,
                             colors = colors,
                             isDestructive = true,
                             onClick = { showResetDialog = true }
@@ -169,42 +177,21 @@ fun SettingsScreen(
                 }
             }
 
+            // ── INFORMACIÓN
             item {
-                Text(
-                    text = "Informacion",
-                    color = colors.mutedForeground,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
+                SectionLabel(strings.information, colors)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = colors.surface)
                 ) {
-                    val context = LocalContext.current
-                    val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-                    val version = packageInfo.versionName
+                    val versionName = runCatching {
+                        context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
+                    }.getOrDefault("1.0.0")
                     Column {
-                        SettingsItem(
-                            icon = Icons.Filled.Info,
-                            title = "Version",
-                            subtitle = LocalContext.current.packageManager.getPackageInfo(context.packageName, 0).versionName.toString(),
-                            colors = colors
-                        )
-
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            color = colors.border
-                        )
-
-                        SettingsItem(
-                            icon = Icons.Filled.Edit,
-                            title = "Desarrollado por",
-                            subtitle = "PLS",
-                            colors = colors
-                        )
+                        SettingsItem(icon = Icons.Filled.Info, title = strings.version, subtitle = versionName, colors = colors)
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = colors.border)
+                        SettingsItem(icon = Icons.Filled.Edit, title = strings.developedBy, subtitle = "PLS", colors = colors)
                     }
                 }
             }
@@ -215,149 +202,297 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
             containerColor = colors.surface,
-            title = {
-                Text(
-                    "¿Borrar todos los datos?",
-                    color = colors.onSurface,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Text(
-                    "Esta accion no se puede deshacer. Se eliminaran todas tus sesiones, estadisticas y logros.",
-                    color = colors.mutedForeground
-                )
-            },
+            title = { Text(strings.deleteAllConfirmTitle, color = colors.onSurface, fontWeight = FontWeight.Bold) },
+            text = { Text(strings.deleteAllConfirmMsg, color = colors.mutedForeground) },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        sessionManager.deleteAllSessions()
-                        showResetDialog = false
-                        Toast.makeText(context, "Datos eliminados", Toast.LENGTH_SHORT).show()
-                    }
-                ) {
-                    Text("Borrar todo", color = MaterialTheme.colorScheme.error)
-                }
+                TextButton(onClick = {
+                    sessionManager.deleteAllSessions()
+                    showResetDialog = false
+                    Toast.makeText(context, strings.dataDeleted, Toast.LENGTH_SHORT).show()
+                }) { Text(strings.deleteAllConfirmBtn, color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { showResetDialog = false }) {
-                    Text("Cancelar", color = colors.primary)
+                TextButton(onClick = { showResetDialog = false }) { Text(strings.cancel, color = colors.primary) }
+            }
+        )
+    }
+
+    if (showExportDialog) {
+        ExportOptionsDialog(
+            colors = colors,
+            strings = strings,
+            onDismiss = { showExportDialog = false },
+            onExportPdf = {
+                showExportDialog = false
+                scope.launch {
+                    val s = sessionManager.getStats(StatsFilter.ALL)
+                    val uri = ExportUtils.exportStatsToPdf(context, s.pieceStats, s.total, StatsFilter.ALL, sessionManager.getSessions())
+                    uri?.let { ExportUtils.openFile(context, it, "application/pdf") }
+                }
+            },
+            onExportExcel = {
+                showExportDialog = false
+                scope.launch {
+                    val s = sessionManager.getStats(StatsFilter.ALL)
+                    val uri = ExportUtils.exportStatsToExcel(context, s.pieceStats, s.total, StatsFilter.ALL, sessionManager.getSessions())
+                    uri?.let { ExportUtils.openFile(context, it, "text/csv") }
+                }
+            },
+            onSharePdf = {
+                showExportDialog = false
+                scope.launch {
+                    val s = sessionManager.getStats(StatsFilter.ALL)
+                    val uri = ExportUtils.exportStatsToPdf(context, s.pieceStats, s.total, StatsFilter.ALL, sessionManager.getSessions())
+                    uri?.let { ExportUtils.shareFile(context, it, "application/pdf", strings.exportShare) }
+                }
+            },
+            onShareExcel = {
+                showExportDialog = false
+                scope.launch {
+                    val s = sessionManager.getStats(StatsFilter.ALL)
+                    val uri = ExportUtils.exportStatsToExcel(context, s.pieceStats, s.total, StatsFilter.ALL, sessionManager.getSessions())
+                    uri?.let { ExportUtils.shareFile(context, it, "text/csv", strings.exportShare) }
                 }
             }
         )
     }
 
-    if (showExportOptions) {
-        AlertDialog(
-            onDismissRequest = { showExportOptions = false },
-            containerColor = colors.surface,
-            title = {
-                Text(
-                    "Exportar estadisticas",
-                    color = colors.onSurface,
-                    fontWeight = FontWeight.Bold
-                )
+    if (showCustomPiecesDialog) {
+        CustomPiecesDialog(
+            colors = colors,
+            strings = strings,
+            pieces = customPieces,
+            onDismiss = { showCustomPiecesDialog = false },
+            onAdd = { piece ->
+                settingsManager.addCustomPiece(piece)
+                customPieces = settingsManager.getCustomPieces()
             },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Selecciona el formato:", color = colors.mutedForeground)
-                }
-            },
-            confirmButton = {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextButton(
-                        onClick = {
-                            scope.launch {
-                                val text = generateExportText(sessionManager)
-                                shareText(context, text)
-                            }
-                            showExportOptions = false
-                        }
-                    ) {
-                        Icon(
-                            Icons.Filled.AddCircle,
-                            contentDescription = null,
-                            tint = colors.primary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Texto", color = colors.primary)
-                    }
-
-                    TextButton(
-                        onClick = {
-                            scope.launch {
-                                val json = generateExportJson(sessionManager)
-                                shareText(context, json, isJson = true)
-                            }
-                            showExportOptions = false
-                        }
-                    ) {
-                        Icon(
-                            Icons.Filled.Edit,
-                            contentDescription = null,
-                            tint = colors.primary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("JSON", color = colors.primary)
-                    }
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showExportOptions = false }) {
-                    Text("Cancelar", color = colors.mutedForeground)
-                }
+            onDelete = { id ->
+                settingsManager.removeCustomPiece(id)
+                customPieces = settingsManager.getCustomPieces()
             }
         )
     }
 }
 
 @Composable
-private fun ThemeOption(
-    theme: AppTheme,
-    isSelected: Boolean,
+private fun ExportOptionsDialog(
     colors: SushiColors,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    strings: AppStrings.Strings,
+    onDismiss: () -> Unit,
+    onExportPdf: () -> Unit,
+    onExportExcel: () -> Unit,
+    onSharePdf: () -> Unit,
+    onShareExcel: () -> Unit
 ) {
-    val themeColors = getColorsForTheme(theme)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = colors.surface,
+        title = { Text(strings.exportTitle, color = colors.onSurface, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(strings.exportSelectFormat, color = colors.mutedForeground)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ExportBtn(Icons.Filled.Edit, strings.exportPdf, "Abrir", colors, onExportPdf, Modifier.weight(1f))
+                    ExportBtn(Icons.Filled.Check, strings.exportExcel, "Abrir", colors, onExportExcel, Modifier.weight(1f))
+                }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ExportBtn(Icons.Filled.Share, strings.exportPdf, strings.exportShare, colors, onSharePdf, Modifier.weight(1f))
+                    ExportBtn(Icons.Filled.Share, strings.exportExcel, strings.exportShare, colors, onShareExcel, Modifier.weight(1f))
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text(strings.cancel, color = colors.mutedForeground) } }
+    )
+}
 
+@Composable
+private fun ExportBtn(
+    icon: ImageVector, label: String, sublabel: String,
+    colors: SushiColors, onClick: () -> Unit, modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(if (isSelected) colors.primary.copy(alpha = 0.1f) else colors.secondary)
-            .border(
-                width = if (isSelected) 2.dp else 0.dp,
-                color = if (isSelected) colors.primary else Color.Transparent,
-                shape = RoundedCornerShape(12.dp)
-            )
+            .background(colors.secondary)
             .clickable(onClick = onClick)
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(themeColors.background)
-                .border(1.dp, themeColors.border, CircleShape),
+            modifier = Modifier.size(44.dp).clip(CircleShape).background(colors.primary),
             contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(20.dp)
-                    .clip(CircleShape)
-                    .background(themeColors.primary)
-            )
+            Icon(icon, contentDescription = label, tint = colors.onPrimary, modifier = Modifier.size(22.dp))
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(label, color = colors.onSurface, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Text(sublabel, color = colors.mutedForeground, fontSize = 10.sp)
+    }
+}
+
+@Composable
+private fun CustomPiecesDialog(
+    colors: SushiColors,
+    strings: AppStrings.Strings,
+    pieces: List<CustomPiece>,
+    onDismiss: () -> Unit,
+    onAdd: (CustomPiece) -> Unit,
+    onDelete: (String) -> Unit
+) {
+    var newName by remember { mutableStateOf("") }
+    var newEmoji by remember { mutableStateOf("🍱") }
+    var showNameError by remember { mutableStateOf(false) }
+    var deleteTarget by remember { mutableStateOf<CustomPiece?>(null) }
+    val emojiOptions = listOf("🍱", "🍣", "🥢", "🍙", "🥟", "🍜", "🥗", "🍤", "🫙", "🥡")
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = colors.surface,
+        title = { Text(strings.customPiecesManage, color = colors.onSurface, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (pieces.isEmpty()) {
+                    Text(strings.customPiecesEmpty, color = colors.mutedForeground, fontSize = 13.sp)
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        pieces.forEach { piece ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(colors.secondary)
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(piece.emoji, fontSize = 20.sp)
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = piece.name,
+                                    color = colors.onSurface,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                IconButton(onClick = { deleteTarget = piece }, modifier = Modifier.size(32.dp)) {
+                                    Icon(
+                                        Icons.Filled.Delete, contentDescription = strings.delete,
+                                        tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                HorizontalDivider(color = colors.border)
+                Text(strings.customPieceName, color = colors.mutedForeground, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    emojiOptions.forEach { emoji ->
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(if (newEmoji == emoji) colors.primary.copy(alpha = 0.25f) else colors.secondary)
+                                .border(if (newEmoji == emoji) 2.dp else 0.dp, if (newEmoji == emoji) colors.primary else Color.Transparent, CircleShape)
+                                .clickable { newEmoji = emoji },
+                            contentAlignment = Alignment.Center
+                        ) { Text(emoji, fontSize = 16.sp) }
+                    }
+                }
+                OutlinedTextField(
+                    value = newName,
+                    onValueChange = { newName = it; showNameError = false },
+                    placeholder = { Text(strings.customPieceNameHint, color = colors.mutedForeground) },
+                    isError = showNameError,
+                    supportingText = if (showNameError) { { Text(strings.noPieceName, color = MaterialTheme.colorScheme.error) } } else null,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colors.primary,
+                        unfocusedBorderColor = colors.border,
+                        cursorColor = colors.primary,
+                        focusedTextColor = colors.onSurface,
+                        unfocusedTextColor = colors.onSurface
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Button(
+                    onClick = {
+                        if (newName.isBlank()) { showNameError = true }
+                        else {
+                            onAdd(CustomPiece(id = "custom_${UUID.randomUUID()}", name = newName.trim(), emoji = newEmoji))
+                            newName = ""; newEmoji = "🍱"
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(strings.addCustomPiece, fontWeight = FontWeight.Bold)
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text(strings.cancel, color = colors.mutedForeground) } }
+    )
+
+    deleteTarget?.let { piece ->
+        AlertDialog(
+            onDismissRequest = { deleteTarget = null },
+            containerColor = colors.surface,
+            title = { Text(strings.deleteCustomPiece, color = colors.onSurface, fontWeight = FontWeight.Bold) },
+            text = { Text(strings.deleteCustomPieceConfirm.format(piece.name), color = colors.mutedForeground) },
+            confirmButton = {
+                TextButton(onClick = { onDelete(piece.id); deleteTarget = null }) {
+                    Text(strings.delete, color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteTarget = null }) { Text(strings.cancel, color = colors.primary) }
+            }
+        )
+    }
+}
+
+@Composable
+private fun SectionLabel(text: String, colors: SushiColors) {
+    Text(
+        text = text.uppercase(),
+        color = colors.mutedForeground,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 1.sp,
+        modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
+    )
+}
+
+@Composable
+private fun ThemeOption(
+    theme: AppTheme, isSelected: Boolean, colors: SushiColors,
+    onClick: () -> Unit, modifier: Modifier = Modifier
+) {
+    val themeColors = getColorsForTheme(theme)
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isSelected) colors.primary.copy(alpha = 0.1f) else colors.secondary)
+            .border(if (isSelected) 2.dp else 0.dp, if (isSelected) colors.primary else Color.Transparent, RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier.size(40.dp).clip(CircleShape).background(themeColors.background).border(1.dp, themeColors.border, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(modifier = Modifier.size(20.dp).clip(CircleShape).background(themeColors.primary))
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = when (theme) {
-                AppTheme.DARK -> "Oscuro"
-                AppTheme.SALMON -> "Salmón"
-                AppTheme.LIGHT -> "Claro"
-            },
+            text = when (theme) { AppTheme.DARK -> "Oscuro"; AppTheme.SALMON -> "Salmón"; AppTheme.LIGHT -> "Claro" },
             color = if (isSelected) colors.primary else colors.onSurface,
             fontSize = 12.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
@@ -366,13 +501,34 @@ private fun ThemeOption(
 }
 
 @Composable
+private fun LanguageOption(
+    language: AppLanguage, isSelected: Boolean, colors: SushiColors,
+    onClick: () -> Unit, modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isSelected) colors.primary.copy(alpha = 0.1f) else colors.secondary)
+            .border(if (isSelected) 2.dp else 0.dp, if (isSelected) colors.primary else Color.Transparent, RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 10.dp, horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(language.flag, fontSize = 22.sp)
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = language.displayName,
+            color = if (isSelected) colors.primary else colors.onSurface,
+            fontSize = 11.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+        )
+    }
+}
+
+@Composable
 private fun SettingsItem(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    colors: SushiColors,
-    isDestructive: Boolean = false,
-    onClick: (() -> Unit)? = null
+    icon: ImageVector, title: String, subtitle: String, colors: SushiColors,
+    isDestructive: Boolean = false, onClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
@@ -383,123 +539,20 @@ private fun SettingsItem(
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Icon(
-            imageVector = icon,
-            contentDescription = null,
+            imageVector = icon, contentDescription = null,
             tint = if (isDestructive) MaterialTheme.colorScheme.error else colors.mutedForeground,
             modifier = Modifier.size(24.dp)
         )
-
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 color = if (isDestructive) MaterialTheme.colorScheme.error else colors.onSurface,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
+                fontSize = 16.sp, fontWeight = FontWeight.Medium
             )
-            Text(
-                text = subtitle,
-                color = colors.mutedForeground,
-                fontSize = 13.sp
-            )
+            Text(text = subtitle, color = colors.mutedForeground, fontSize = 13.sp)
         }
-
         if (onClick != null) {
-            Icon(
-                Icons.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = colors.mutedForeground,
-                modifier = Modifier.size(20.dp)
-            )
+            Icon(Icons.Filled.KeyboardArrowRight, contentDescription = null, tint = colors.mutedForeground, modifier = Modifier.size(20.dp))
         }
     }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@SuppressLint("DefaultLocale")
-private fun generateExportText(sessionManager: SessionStorage): String {
-    val stats = sessionManager.getStats(StatsFilter.ALL)
-    val sessions = sessionManager.getSessions()
-
-    return buildString {
-        appendLine("🍣 SUSHI TRACKER - Estadisticas")
-        appendLine("================================")
-        appendLine()
-        appendLine("📊 RESUMEN GENERAL")
-        appendLine("• Total de piezas: ${stats.total}")
-        appendLine("• Sesiones completadas: ${stats.sessionCount}")
-        appendLine("• Promedio por sesion: ${String.format("%.1f", stats.avgPerSession)}")
-        appendLine("• Record personal: ${stats.maxInSession} piezas")
-        appendLine()
-        appendLine("🍱 DESGLOSE POR TIPO")
-        stats.pieceStats.entries.sortedByDescending { it.value }.forEach { (type, count) ->
-            val emoji = when (type) {
-                "nigiri" -> "🍣"
-                "sashimi" -> "🥢"
-                "maki" -> "🍙"
-                "temaki" -> "📜"
-                "gyoza" -> "🥟"
-                "otro" -> "🍽️"
-                else -> "•"
-            }
-            appendLine("$emoji ${type.replaceFirstChar { it.uppercase() }}: $count")
-        }
-        appendLine()
-        appendLine("📅 ULTIMAS SESIONES")
-        sessions.take(5).forEach { session ->
-            appendLine("• ${session.date}: ${session.totalPieces} piezas en ${session.restaurant}")
-        }
-        appendLine()
-        appendLine("Generado con Sushi Tracker 🍣")
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@SuppressLint("DefaultLocale")
-private fun generateExportJson(sessionManager: SessionStorage): String {
-    val stats = sessionManager.getStats(StatsFilter.ALL)
-    val sessions = sessionManager.getSessions()
-
-    return buildString {
-        appendLine("{")
-        appendLine("  \"appName\": \"Sushi Tracker\",")
-        appendLine("  \"exportDate\": \"${java.time.LocalDate.now()}\",")
-        appendLine("  \"statistics\": {")
-        appendLine("    \"totalPieces\": ${stats.total},")
-        appendLine("    \"totalSessions\": ${stats.sessionCount},")
-        appendLine("    \"averagePerSession\": ${String.format("%.2f", stats.avgPerSession)},")
-        appendLine("    \"maxInSession\": ${stats.maxInSession},")
-        appendLine("    \"piecesByType\": {")
-        stats.pieceStats.entries.forEachIndexed { index, (type, count) ->
-            val comma = if (index < stats.pieceStats.size - 1) "," else ""
-            appendLine("      \"$type\": $count$comma")
-        }
-        appendLine("    }")
-        appendLine("  },")
-        appendLine("  \"sessions\": [")
-        sessions.forEachIndexed { index, session ->
-            val comma = if (index < sessions.size - 1) "," else ""
-            appendLine("    {")
-            appendLine("      \"date\": \"${session.date}\",")
-            appendLine("      \"restaurant\": \"${session.restaurant}\",")
-            appendLine("      \"totalPieces\": ${session.totalPieces},")
-            appendLine("      \"pieces\": {")
-            session.pieces.entries.filter { it.value > 0 }.forEachIndexed { pi, (type, count) ->
-                val pc = if (pi < session.pieces.filter { it.value > 0 }.size - 1) "," else ""
-                appendLine("        \"$type\": $count$pc")
-            }
-            appendLine("      }")
-            appendLine("    }$comma")
-        }
-        appendLine("  ]")
-        appendLine("}")
-    }
-}
-
-private fun shareText(context: android.content.Context, text: String, isJson: Boolean = false) {
-    val intent = Intent(Intent.ACTION_SEND).apply {
-        type = if (isJson) "application/json" else "text/plain"
-        putExtra(Intent.EXTRA_SUBJECT, "Sushi Tracker - Estadisticas")
-        putExtra(Intent.EXTRA_TEXT, text)
-    }
-    context.startActivity(Intent.createChooser(intent, "Compartir estadisticas"))
 }

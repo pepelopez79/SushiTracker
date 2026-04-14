@@ -27,7 +27,8 @@ import pls.dev.sushitracker.ui.theme.*
 @Composable
 fun AchievementsScreen(
     colors: SushiColors,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    strings: AppStrings.Strings
 ) {
     val context = LocalContext.current
     val achievementManager = remember { AchievementManager(context) }

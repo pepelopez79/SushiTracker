@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import pls.dev.sushitracker.data.AppStrings
 import pls.dev.sushitracker.data.SessionRecord
 import pls.dev.sushitracker.data.SessionStorage
 import pls.dev.sushitracker.ui.theme.*
@@ -33,12 +34,12 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import kotlin.collections.filter
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HistoryScreen(
     colors: SushiColors,
+    strings: AppStrings.Strings,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -48,85 +49,41 @@ fun HistoryScreen(
     var showDeleteDialog by remember { mutableStateOf<SessionRecord?>(null) }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.background)
+        modifier = Modifier.fillMaxSize().background(colors.background)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             IconButton(
                 onClick = onBack,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(colors.secondary)
+                modifier = Modifier.size(40.dp).clip(CircleShape).background(colors.secondary)
             ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = colors.onSecondary,
-                    modifier = Modifier.size(20.dp)
-                )
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.back, tint = colors.onSecondary, modifier = Modifier.size(20.dp))
             }
             Text(
-                text = "Historial",
+                text = strings.historyTitle,
                 color = colors.onBackground,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold,
                 modifier = Modifier.weight(1f)
             )
-
             if (sessions.isNotEmpty()) {
                 Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(colors.primary.copy(alpha = 0.2f))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                    modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(colors.primary.copy(alpha = 0.2f)).padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
-                    Text(
-                        text = "${sessions.size} sesiones",
-                        color = colors.primary,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Text("${sessions.size} ${strings.sessions}", color = colors.primary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
 
         if (sessions.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Icon(
-                        Icons.Filled.Delete,
-                        contentDescription = null,
-                        tint = colors.mutedForeground,
-                        modifier = Modifier.size(64.dp)
-                    )
-                    Text(
-                        text = "Sin historial",
-                        color = colors.onBackground,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Completa tu primera sesión\npara ver tu historial aqui",
-                        color = colors.mutedForeground,
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center
-                    )
+            Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Icon(Icons.Filled.Delete, contentDescription = null, tint = colors.mutedForeground, modifier = Modifier.size(64.dp))
+                    Text(strings.noHistory, color = colors.onBackground, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(strings.noHistoryDesc, color = colors.mutedForeground, fontSize = 14.sp, textAlign = TextAlign.Center)
                 }
             }
         } else {
@@ -140,15 +97,10 @@ fun HistoryScreen(
                         session = session,
                         isExpanded = expandedSessionId == session.id,
                         colors = colors,
-                        onToggleExpand = {
-                            expandedSessionId = if (expandedSessionId == session.id) null else session.id
-                        },
-                        onShare = {
-                            shareSession(context, session)
-                        },
-                        onDelete = {
-                            showDeleteDialog = session
-                        }
+                        strings = strings,
+                        onToggleExpand = { expandedSessionId = if (expandedSessionId == session.id) null else session.id },
+                        onShare = { shareSession(context, session, strings) },
+                        onDelete = { showDeleteDialog = session }
                     )
                 }
             }
@@ -159,34 +111,17 @@ fun HistoryScreen(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = null },
             containerColor = colors.surface,
-            title = {
-                Text(
-                    "¿Eliminar sesion?",
-                    color = colors.onSurface,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Text(
-                    "Se eliminara la sesion del ${formatDate(session.date)} con ${session.totalPieces} piezas.",
-                    color = colors.mutedForeground
-                )
-            },
+            title = { Text(strings.deleteSession, color = colors.onSurface, fontWeight = FontWeight.Bold) },
+            text = { Text(strings.deleteSessionConfirm.format(session.totalPieces), color = colors.mutedForeground) },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        sessionManager.deleteSession(session.id)
-                        sessions = sessionManager.getSessions()
-                        showDeleteDialog = null
-                    }
-                ) {
-                    Text("Eliminar", color = colors.primary)
-                }
+                TextButton(onClick = {
+                    sessionManager.deleteSession(session.id)
+                    sessions = sessionManager.getSessions()
+                    showDeleteDialog = null
+                }) { Text(strings.delete, color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = null }) {
-                    Text("Cancelar", color = colors.mutedForeground)
-                }
+                TextButton(onClick = { showDeleteDialog = null }) { Text(strings.cancel, color = colors.primary) }
             }
         )
     }
@@ -198,6 +133,7 @@ private fun SessionHistoryCard(
     session: SessionRecord,
     isExpanded: Boolean,
     colors: SushiColors,
+    strings: AppStrings.Strings,
     onToggleExpand: () -> Unit,
     onShare: () -> Unit,
     onDelete: () -> Unit
@@ -211,10 +147,7 @@ private fun SessionHistoryCard(
     ) {
         Column {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onToggleExpand)
-                    .padding(16.dp),
+                modifier = Modifier.fillMaxWidth().clickable(onClick = onToggleExpand).padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -222,140 +155,70 @@ private fun SessionHistoryCard(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(colors.primary.copy(alpha = 0.2f)
-                    ),
+                        .background(when { totalPieces >= 50 -> colors.primary.copy(alpha = 0.2f); totalPieces >= 30 -> colors.primary.copy(alpha = 0.2f); else -> colors.secondary }),
                     contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "🍣",
-                        fontSize = 24.sp
-                    )
-                }
+                ) { Text("🍣", fontSize = 24.sp) }
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = formatDate(session.date),
-                        color = colors.onSurface,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = session.restaurant,
-                        color = colors.mutedForeground,
-                        fontSize = 12.sp
-                    )
-                    Text(
-                        text = getRelativeDate(session.date),
-                        color = colors.mutedForeground,
-                        fontSize = 12.sp
-                    )
+                    Text(formatDate(session.date), color = colors.onSurface, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(session.restaurant, color = colors.mutedForeground, fontSize = 12.sp)
+                    Text(getRelativeDate(session.date, strings), color = colors.mutedForeground, fontSize = 11.sp)
                 }
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = totalPieces.toString(),
-                        color = colors.primary,
+                        color = when { totalPieces >= 50 -> colors.primary; totalPieces >= 30 -> colors.primary; else -> colors.onSurface },
                         fontSize = 24.sp,
                         fontWeight = FontWeight.ExtraBold
                     )
-                    Text(
-                        text = "piezas",
-                        color = colors.mutedForeground,
-                        fontSize = 11.sp
-                    )
+                    Text(strings.pieces, color = colors.mutedForeground, fontSize = 11.sp)
                 }
 
                 Icon(
                     imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                    contentDescription = if (isExpanded) "Colapsar" else "Expandir",
+                    contentDescription = null,
                     tint = colors.mutedForeground,
                     modifier = Modifier.size(24.dp)
                 )
             }
 
-            AnimatedVisibility(
-                visible = isExpanded,
-                enter = expandVertically(),
-                exit = shrinkVertically()
-            ) {
+            AnimatedVisibility(visible = isExpanded, enter = expandVertically(), exit = shrinkVertically()) {
                 Column {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = colors.border
-                    )
-
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        session.pieces
-                            .filter { it.value > 0 }
-                            .forEach { piece ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = getPieceEmoji(piece.key),
-                                            fontSize = 16.sp
-                                        )
-                                        Text(
-                                            text = piece.key.replaceFirstChar { it.uppercase() },
-                                            color = colors.onSurface,
-                                            fontSize = 14.sp
-                                        )
-                                    }
-                                    Text(
-                                        text = "${piece.value}",
-                                        color = colors.primary,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = colors.border)
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        session.pieces.filter { it.value > 0 }.forEach { (key, value) ->
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(getPieceEmoji(key), fontSize = 16.sp)
+                                    Text(key.replaceFirstChar { it.uppercase() }, color = colors.onSurface, fontSize = 14.sp)
                                 }
+                                Text("$value", color = colors.primary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                             }
+                        }
                     }
-
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .padding(bottom = 16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedButton(
                             onClick = onShare,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = colors.primary
-                            )
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.primary)
                         ) {
-                            Icon(
-                                Icons.Filled.Share,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
+                            Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Compartir", fontSize = 13.sp)
+                            Text(strings.share, fontSize = 13.sp)
                         }
-
                         OutlinedButton(
                             onClick = onDelete,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            Icon(
-                                Icons.Filled.Delete,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
+                            Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Eliminar", fontSize = 13.sp)
+                            Text(strings.delete, fontSize = 13.sp)
                         }
                     }
                 }
@@ -364,16 +227,8 @@ private fun SessionHistoryCard(
     }
 }
 
-private fun getPieceEmoji(type: String): String {
-    return when (type.lowercase()) {
-        "nigiri" -> "🍣"
-        "sashimi" -> "🥢"
-        "maki" -> "🍙"
-        "temaki" -> "📜"
-        "gyoza" -> "🥟"
-        "otro" -> "🍽️"
-        else -> "🍱"
-    }
+private fun getPieceEmoji(type: String): String = when (type.lowercase()) {
+    "nigiri" -> "🍣"; "sashimi" -> "🥢"; "maki" -> "🍙"; "temaki" -> "📜"; "gyoza" -> "🥟"; "otro" -> "🍽️"; else -> "🍱"
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -381,62 +236,47 @@ internal fun formatDate(dateString: String): String {
     return try {
         val date = try {
             LocalDateTime.parse(dateString, DateTimeFormatter.ISO_DATE_TIME).toLocalDate()
-        } catch (e: Exception) {
-            LocalDate.parse(dateString)
-        }
-        val formatter = DateTimeFormatter.ofPattern("d 'de' MMMM, yyyy", java.util.Locale("es", "ES"))
-        date.format(formatter)
-    } catch (e: Exception) {
-        dateString
-    }
+        } catch (e: Exception) { LocalDate.parse(dateString) }
+        date.format(DateTimeFormatter.ofPattern("d 'de' MMMM, yyyy", java.util.Locale("es", "ES")))
+    } catch (e: Exception) { dateString }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-private fun getRelativeDate(dateString: String): String {
+private fun getRelativeDate(dateString: String, strings: AppStrings.Strings): String {
     return try {
         val date = try {
             LocalDateTime.parse(dateString, DateTimeFormatter.ISO_DATE_TIME).toLocalDate()
-        } catch (e: Exception) {
-            LocalDate.parse(dateString)
-        }
-        val today = LocalDate.now()
-        val daysBetween = ChronoUnit.DAYS.between(date, today)
-
+        } catch (e: Exception) { LocalDate.parse(dateString) }
+        val daysBetween = ChronoUnit.DAYS.between(date, LocalDate.now())
         when {
-            daysBetween == 0L -> "Hoy"
-            daysBetween == 1L -> "Ayer"
-            daysBetween < 7 -> "Hace $daysBetween dias"
-            daysBetween < 30 -> "Hace ${daysBetween / 7} semanas"
-            else -> "Hace ${daysBetween / 30} meses"
+            daysBetween == 0L -> strings.today
+            daysBetween == 1L -> strings.yesterday
+            daysBetween < 7 -> strings.daysAgo.format(daysBetween)
+            daysBetween < 30 -> strings.weeksAgo.format(daysBetween / 7)
+            else -> strings.monthsAgo.format(daysBetween / 30)
         }
-    } catch (e: Exception) {
-        ""
-    }
+    } catch (e: Exception) { "" }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-private fun shareSession(context: android.content.Context, session: SessionRecord) {
-    val totalPieces = session.totalPieces
+private fun shareSession(context: android.content.Context, session: SessionRecord, strings: AppStrings.Strings) {
     val text = buildString {
-        appendLine("🍣 Mi sesión de sushi")
+        appendLine("🍣 ${strings.newSession}")
         appendLine("📅 ${formatDate(session.date)}")
         appendLine("🏠 ${session.restaurant}")
         appendLine()
-        appendLine("Total: $totalPieces piezas")
+        appendLine("${strings.total}: ${session.totalPieces} ${strings.pieces}")
         appendLine()
-        session.pieces
-            .filter { it.value > 0 }
-            .forEach { piece ->
-                appendLine("${getPieceEmoji(piece.key)} ${piece.key.replaceFirstChar { it.uppercase() }}: ${piece.value}")
-            }
+        session.pieces.filter { it.value > 0 }.forEach { (key, value) ->
+            appendLine("${getPieceEmoji(key)} ${key.replaceFirstChar { it.uppercase() }}: $value")
+        }
         appendLine()
-        appendLine("Registrado con Sushi Tracker 🍣")
+        appendLine("Sushi Tracker 🍣")
     }
-
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
-        putExtra(Intent.EXTRA_SUBJECT, "Mi sesion de sushi - ${formatDate(session.date)}")
+        putExtra(Intent.EXTRA_SUBJECT, "Sushi Tracker - ${formatDate(session.date)}")
         putExtra(Intent.EXTRA_TEXT, text)
     }
-    context.startActivity(Intent.createChooser(intent, "Compartir sesión"))
+    context.startActivity(Intent.createChooser(intent, strings.share))
 }

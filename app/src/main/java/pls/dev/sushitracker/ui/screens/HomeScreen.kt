@@ -19,11 +19,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import pls.dev.sushitracker.data.AppStrings
 import pls.dev.sushitracker.ui.theme.*
 
 @Composable
 fun HomeScreen(
     colors: SushiColors,
+    strings: AppStrings.Strings,
     onStartCounter: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenStats: () -> Unit,
@@ -55,12 +57,7 @@ fun HomeScreen(
                 .clip(CircleShape)
                 .background(colors.secondary)
         ) {
-            Icon(
-                Icons.Filled.Settings,
-                contentDescription = "Ajustes",
-                tint = colors.onSecondary,
-                modifier = Modifier.size(24.dp)
-            )
+            Icon(Icons.Filled.Settings, contentDescription = strings.settings, tint = colors.onSecondary, modifier = Modifier.size(24.dp))
         }
 
         Column(
@@ -70,173 +67,79 @@ fun HomeScreen(
                 .padding(horizontal = 24.dp)
                 .align(Alignment.Center)
         ) {
-            Text(
-                text = "SUSHI",
-                color = colors.onBackground,
-                fontSize = 48.sp,
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = (-1).sp,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "TRACKER",
-                color = colors.onBackground,
-                fontSize = 48.sp,
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = (-1).sp,
-                textAlign = TextAlign.Center
-            )
+            Text("SUSHI", color = colors.onBackground, fontSize = 48.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = (-1).sp, textAlign = TextAlign.Center)
+            Text("TRACKER", color = colors.onBackground, fontSize = 48.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = (-1).sp, textAlign = TextAlign.Center)
 
             Spacer(modifier = Modifier.height(40.dp))
 
             Box(
-                modifier = Modifier
-                    .offset(y = floatY.dp)
-                    .padding(bottom = 40.dp),
+                modifier = Modifier.offset(y = floatY.dp).padding(bottom = 40.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .offset(x = (-10).dp, y = (-10).dp)
-                        .rotate(-20f)
-                        .width(6.dp)
-                        .height(112.dp)
-                        .clip(CircleShape)
-                        .background(colors.primary)
-                )
-                Box(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .offset(x = 5.dp, y = (20).dp)
-                        .clip(CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "\uD83C\uDF63", fontSize = 40.sp)
+                Box(modifier = Modifier.offset(x = (-10).dp, y = (-10).dp).rotate(-20f).width(6.dp).height(112.dp).clip(CircleShape).background(colors.primary))
+                Box(modifier = Modifier.size(100.dp).offset(x = 5.dp, y = 20.dp).clip(CircleShape), contentAlignment = Alignment.Center) {
+                    Text(text = "🍣", fontSize = 40.sp)
                 }
-                Box(
-                    modifier = Modifier
-                        .offset(x = 12.dp, y = (-10).dp)
-                        .rotate(20f)
-                        .width(6.dp)
-                        .height(112.dp)
-                        .clip(CircleShape)
-                        .background(colors.primary)
-                )
+                Box(modifier = Modifier.offset(x = 12.dp, y = (-10).dp).rotate(20f).width(6.dp).height(112.dp).clip(CircleShape).background(colors.primary))
             }
 
             Button(
                 onClick = onStartCounter,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colors.primary,
-                    contentColor = colors.onPrimary
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
                 shape = RoundedCornerShape(50),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 8.dp
-                )
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
             ) {
-                Text(
-                    text = "COMENZAR",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
+                Text(strings.begin, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp)
-                )
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(24.dp))
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = onOpenHistory,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colors.secondary,
-                    contentColor = colors.onSecondary
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = colors.secondary, contentColor = colors.onSecondary),
                 shape = RoundedCornerShape(50),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 8.dp
-                )
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
             ) {
-                Icon(
-                    Icons.Filled.Star,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
+                Icon(Icons.Filled.Star, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "HISTORIAL",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
+                Text(strings.history, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = onOpenStats,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colors.secondary,
-                    contentColor = colors.onSecondary
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = colors.secondary, contentColor = colors.onSecondary),
                 shape = RoundedCornerShape(50),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 8.dp
-                )
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
             ) {
-                Icon(
-                    Icons.Filled.Person,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
+                Icon(Icons.Filled.Person, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "ESTADÍSTICAS",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
+                Text(strings.stats, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = onOpenAchievements,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colors.secondary,
-                    contentColor = colors.onSecondary
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = colors.secondary, contentColor = colors.onSecondary),
                 shape = RoundedCornerShape(50),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 8.dp
-                )
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
             ) {
-                Icon(
-                    Icons.Filled.AccountBox,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
+                Icon(Icons.Filled.AccountBox, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "LOGROS",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
+                Text(strings.achievements, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(strings.tagline, color = colors.mutedForeground, fontSize = 14.sp, textAlign = TextAlign.Center)
         }
     }
 }

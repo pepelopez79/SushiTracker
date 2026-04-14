@@ -17,7 +17,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
+import pls.dev.sushitracker.data.AppLanguage
 import pls.dev.sushitracker.data.AppSettingsManager
+import pls.dev.sushitracker.data.AppStrings
 import pls.dev.sushitracker.data.AppTheme
 import pls.dev.sushitracker.ui.navigation.SushiNavGraph
 import pls.dev.sushitracker.ui.theme.SushiTrackerTheme
@@ -34,6 +36,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             var currentTheme by remember { mutableStateOf(settingsManager.getTheme()) }
+            var currentLanguage by remember { mutableStateOf(settingsManager.getLanguage()) }
+            val strings = remember(currentLanguage) { AppStrings.get(currentLanguage) }
+
             val colors = getColorsForTheme(currentTheme)
 
             val view = LocalView.current
@@ -63,9 +68,15 @@ class MainActivity : ComponentActivity() {
                         SushiNavGraph(
                             navController = navController,
                             currentTheme = currentTheme,
+                            currentLanguage = currentLanguage,
+                            strings = strings,
                             onThemeChange = { newTheme ->
                                 currentTheme = newTheme
                                 settingsManager.setTheme(newTheme)
+                            },
+                            onLanguageChange = { newLang ->
+                                currentLanguage = newLang
+                                settingsManager.setLanguage(newLang)
                             },
                             colors = colors
                         )

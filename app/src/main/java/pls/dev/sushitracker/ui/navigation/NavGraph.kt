@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import pls.dev.sushitracker.data.AppLanguage
+import pls.dev.sushitracker.data.AppStrings
 import pls.dev.sushitracker.data.AppTheme
 import pls.dev.sushitracker.ui.screens.*
 import pls.dev.sushitracker.ui.theme.SushiColors
@@ -25,7 +27,10 @@ sealed class Screen(val route: String) {
 fun SushiNavGraph(
     navController: NavHostController,
     currentTheme: AppTheme,
+    currentLanguage: AppLanguage,
+    strings: AppStrings.Strings,
     onThemeChange: (AppTheme) -> Unit,
+    onLanguageChange: (AppLanguage) -> Unit,
     colors: SushiColors
 ) {
     NavHost(
@@ -34,39 +39,31 @@ fun SushiNavGraph(
     ) {
         composable(Screen.Splash.route) {
             SplashScreen(
+                colors = colors,
                 onFinished = {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }
-                },
-                colors = colors
+                }
             )
         }
 
         composable(Screen.Home.route) {
             HomeScreen(
                 colors = colors,
-                onStartCounter = {
-                    navController.navigate(Screen.Counter.route)
-                },
-                onOpenHistory = {
-                    navController.navigate(Screen.History.route)
-                },
-                onOpenStats = {
-                    navController.navigate(Screen.Stats.route)
-                },
-                onOpenAchievements = {
-                    navController.navigate(Screen.Achievements.route)
-                },
-                onOpenSettings = {
-                    navController.navigate(Screen.Settings.route)
-                }
+                strings = strings,
+                onStartCounter = { navController.navigate(Screen.Counter.route) },
+                onOpenHistory = { navController.navigate(Screen.History.route) },
+                onOpenStats = { navController.navigate(Screen.Stats.route) },
+                onOpenAchievements = { navController.navigate(Screen.Achievements.route) },
+                onOpenSettings = { navController.navigate(Screen.Settings.route) }
             )
         }
 
         composable(Screen.Counter.route) {
             CounterScreen(
                 colors = colors,
+                strings = strings,
                 onBack = { navController.popBackStack() }
             )
         }
@@ -74,6 +71,7 @@ fun SushiNavGraph(
         composable(Screen.History.route) {
             HistoryScreen(
                 colors = colors,
+                strings = strings,
                 onBack = { navController.popBackStack() }
             )
         }
@@ -81,6 +79,7 @@ fun SushiNavGraph(
         composable(Screen.Stats.route) {
             StatsScreen(
                 colors = colors,
+                strings = strings,
                 onBack = { navController.popBackStack() }
             )
         }
@@ -88,16 +87,20 @@ fun SushiNavGraph(
         composable(Screen.Achievements.route) {
             AchievementsScreen(
                 colors = colors,
+                strings = strings,
                 onBack = { navController.popBackStack() }
             )
         }
 
         composable(Screen.Settings.route) {
             SettingsScreen(
-                onBack = { navController.popBackStack() },
-                onThemeChange = onThemeChange,
+                colors = colors,
+                strings = strings,
                 currentTheme = currentTheme,
-                colors = colors
+                currentLanguage = currentLanguage,
+                onThemeChange = onThemeChange,
+                onLanguageChange = onLanguageChange,
+                onBack = { navController.popBackStack() }
             )
         }
     }
