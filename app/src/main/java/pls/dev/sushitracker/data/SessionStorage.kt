@@ -11,6 +11,7 @@ import java.time.LocalDateTime
 import java.time.DayOfWeek
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
+import androidx.core.content.edit
 
 class SessionStorage(context: Context) {
 
@@ -28,7 +29,19 @@ class SessionStorage(context: Context) {
     fun saveSession(session: SessionRecord) {
         val sessions = getSessions().toMutableList()
         sessions.add(0, session)
-        prefs.edit().putString(key, gson.toJson(sessions)).apply()
+        prefs.edit { putString(key, gson.toJson(sessions)) }
+    }
+
+    // FIX: método que faltaba — sin esto el borrado no funcionaba
+    fun deleteSession(id: String) {
+        val sessions = getSessions().toMutableList()
+        sessions.removeAll { it.id == id }
+        prefs.edit { putString(key, gson.toJson(sessions)) }
+    }
+
+    // FIX: método que faltaba — necesario para "Borrar todos los datos" en Settings
+    fun deleteAllSessions() {
+        prefs.edit { remove(key) }
     }
 
     fun getSessionById(id: String): SessionRecord? {
@@ -79,7 +92,11 @@ class SessionStorage(context: Context) {
             }
         }
 
-        return StatsResult(pieceStats, total)
+        // FIX: calcular promedio y récord correctamente aquí, donde tenemos acceso a filtered
+        val avgPerSession = if (filtered.isNotEmpty()) total.toDouble() / filtered.size else 0.0
+        val maxInSession = filtered.maxOfOrNull { it.totalPieces } ?: 0
+
+        return StatsResult(pieceStats, total, filtered.size, avgPerSession, maxInSession)
     }
 }
 
@@ -89,5 +106,9 @@ enum class StatsFilter {
 
 data class StatsResult(
     val pieceStats: Map<String, Int>,
-    val total: Int
+    val total: Int,
+    // FIX: campos nuevos para no tener que recalcular (evitaba bugs por usar pieceStats como Int)
+    val sessionCount: Int = 0,
+    val avgPerSession: Double = 0.0,
+    val maxInSession: Int = 0
 )

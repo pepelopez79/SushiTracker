@@ -24,12 +24,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.*
 import pls.dev.sushitracker.data.SushiPiece
-import pls.dev.sushitracker.ui.theme.Destructive
-import pls.dev.sushitracker.ui.theme.ItemBackground
-import pls.dev.sushitracker.ui.theme.ItemForeground
-import pls.dev.sushitracker.ui.theme.Primary
+import pls.dev.sushitracker.ui.theme.*
+import kotlinx.coroutines.*
 
 @Composable
 fun PieceCounterItem(

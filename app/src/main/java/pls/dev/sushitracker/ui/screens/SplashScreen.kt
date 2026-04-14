@@ -20,7 +20,10 @@ import pls.dev.sushitracker.ui.theme.*
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(onFinished: () -> Unit) {
+fun SplashScreen(
+    colors: SushiColors,
+    onFinished: () -> Unit
+) {
     var visible by remember { mutableStateOf(false) }
 
     val scale by animateFloatAsState(
@@ -43,16 +46,6 @@ fun SplashScreen(onFinished: () -> Unit) {
             repeatMode = RepeatMode.Reverse
         ),
         label = "floatY"
-    )
-
-    val chopstickRotation by infiniteTransition.animateFloat(
-        initialValue = -15f,
-        targetValue = 5f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = EaseInOutCubic),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "chopstick"
     )
 
     val dot1 by infiniteTransition.animateFloat(
@@ -86,7 +79,7 @@ fun SplashScreen(onFinished: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Background)
+            .background(colors.background)
             .scale(scale)
             .alpha(alpha),
         contentAlignment = Alignment.Center
@@ -98,52 +91,43 @@ fun SplashScreen(onFinished: () -> Unit) {
             Box(
                 modifier = Modifier
                     .offset(y = floatY.dp)
-                    .padding(bottom = 32.dp),
+                    .padding(bottom = 40.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
                     modifier = Modifier
-                        .offset(x = (-12).dp, y = (-24).dp)
-                        .rotate(chopstickRotation)
+                        .offset(x = (-10).dp, y = (-10).dp)
+                        .rotate(-20f)
                         .width(6.dp)
-                        .height(128.dp)
+                        .height(112.dp)
                         .clip(CircleShape)
-                        .background(Primary)
+                        .background(colors.primary)
                 )
+
                 Box(
                     modifier = Modifier
-                        .offset(x = 16.dp, y = (-24).dp)
-                        .rotate(12f)
-                        .width(6.dp)
-                        .height(128.dp)
-                        .clip(CircleShape)
-                        .background(Primary)
-                )
-                Box(
-                    modifier = Modifier
-                        .size(144.dp)
-                        .clip(CircleShape)
-                        .background(Surface),
+                        .size(100.dp)
+                        .offset(x = 5.dp, y = 20.dp)
+                        .clip(CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(112.dp)
-                            .clip(CircleShape)
-                            .background(Background),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "\uD83C\uDF63",
-                            fontSize = 48.sp
-                        )
-                    }
+                    Text(text = "🍣", fontSize = 40.sp)
                 }
+
+                Box(
+                    modifier = Modifier
+                        .offset(x = 12.dp, y = (-10).dp)
+                        .rotate(20f)
+                        .width(6.dp)
+                        .height(112.dp)
+                        .clip(CircleShape)
+                        .background(colors.primary)
+                )
             }
 
             Text(
                 text = "SUSHI",
-                color = OnBackground,
+                color = colors.onBackground,
                 fontSize = 48.sp,
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = (-1).sp,
@@ -151,7 +135,7 @@ fun SplashScreen(onFinished: () -> Unit) {
             )
             Text(
                 text = "TRACKER",
-                color = OnBackground,
+                color = colors.onBackground,
                 fontSize = 48.sp,
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = (-1).sp,
@@ -170,13 +154,10 @@ fun SplashScreen(onFinished: () -> Unit) {
                             .offset(y = offsetY.dp)
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(Primary)
+                            .background(colors.primary)
                     )
                 }
             }
         }
     }
 }
-
-private val EaseOutCubic = CubicBezierEasing(0.33f, 1f, 0.68f, 1f)
-private val EaseInOutCubic = CubicBezierEasing(0.65f, 0f, 0.35f, 1f)

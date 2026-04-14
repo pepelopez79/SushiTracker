@@ -1,3 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Sushi Tracker</string>
+    
+    <string name="splash_title">SUSHI\nTRACKER</string>
+
+    <string name="btn_start">COMENZAR SESION</string>
+    <string name="btn_history">HISTORIAL</string>
+    <string name="btn_stats">ESTADISTICAS</string>
+    
+    <string name="counter_title">Sushi Gushi</string>
+    <string name="restaurant_label">Nombre del restaurante</string>
+    <string name="restaurant_hint">Ej: Restaurante Sakura</string>
+    <string name="btn_continue">CONTINUAR</string>
+    <string name="btn_finish">TERMINAR SESION</string>
+    <string name="btn_confirm">CONFIRMAR</string>
+    <string name="btn_cancel">CANCELAR</string>
+    <string name="total_pieces">%d piezas en total</string>
+    <string name="confirm_title">Confirmar Sesión</string>
+    <string name="confirm_message">Guardar sesión con %d piezas en %s?</string>
+    
+    <string name="tab_history">HISTORIAL</string>
+    <string name="tab_ranking">RANKING</string>
+    <string name="history_empty">No hay sesiones registradas</string>
+    <string name="ranking_empty">Aun no hay datos para el ranking</string>
+    <string name="pieces_label">%d piezas</string>
+    <string name="pieces_with_restaurant">%d piezas - %s</string>
+    
+    <string name="detail_title">Detalle de Sesión</string>
+    <string name="detail_subtitle">%s - %s</string>
+    
+    <string name="stats_title">Estadísticas</string>
+    <string name="filter_all">TODOS</string>
+    <string name="filter_year">ANO</string>
+    <string name="filter_month">MES</string>
+    <string name="filter_week">SEMANA</string>
+    <string name="total_consumed">Total consumido</string>
+    <string name="pieces_unit">piezas</string>
+    
+    <string name="sushi_nigiri">NIGIRI</string>
+    <string name="sushi_sashimi">SASHIMI</string>
+    <string name="sushi_maki">MAKI</string>
+    <string name="sushi_uramaki">URAMAKI</string>
+    <string name="sushi_gunkan">GUNKAN</string>
+    <string name="sushi_temaki">TEMAKI</string>
+    <string name="sushi_gyoza">GYOZA</string>
+    <string name="sushi_tempura">TEMPURA</string>
+    <string name="sushi_california">CALIFORNIA ROLL</string>
+    <string name="sushi_dragon">DRAGON ROLL</string>
+    <string name="sushi_edamame">EDAMAME</string>
+    <string name="sushi_takoyaki">TAKOYAKI</string>
+    
+    <string name="cd_back">Volver atras</string>
+    <string name="cd_sushi_image">Imagen de %s</string>
+    <string name="cd_count">Cantidad: %d</string>
+    <string name="cd_medal_gold">Medalla de oro</string>
+    <string name="cd_medal_silver">Medalla de plata</string>
+    <string name="cd_medal_bronze">Medalla de bronce</string>
 </resources>

@@ -93,7 +93,7 @@ File > New > New Project > Empty Activity (Compose)
 ```
 
 Configuracion:
-- Name: `SushiTrackerPro`
+- Name: `SushiTracker`
 - Package: `com.tuapp.sushitracker`
 - Language: Kotlin
 - Minimum SDK: API 26

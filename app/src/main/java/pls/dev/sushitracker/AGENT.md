@@ -195,7 +195,7 @@ Enum para filtrar estadisticas por periodo.
 ```kotlin
 enum class StatsFilter {
     ALL,    // Todos los tiempos
-    YEAR,   // Este ano
+    YEAR,   // Este año
     MONTH,  // Este mes
     WEEK    // Esta semana
 }

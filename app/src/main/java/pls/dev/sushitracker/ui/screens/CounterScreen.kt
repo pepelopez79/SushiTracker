@@ -10,7 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,7 +33,7 @@ enum class CounterPhase {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun CounterScreen(onBack: () -> Unit) {
+fun CounterScreen(onBack: () -> Unit, colors: SushiColors) {
     val context = LocalContext.current
     val storage = remember { SessionStorage(context) }
 
@@ -50,7 +50,8 @@ fun CounterScreen(onBack: () -> Unit) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Background),
+                    // FIX: usaba Background hardcodeado; ahora respeta el tema activo
+                    .background(colors.background),
                 contentAlignment = Alignment.Center
             ) {
                 Card(
@@ -58,22 +59,25 @@ fun CounterScreen(onBack: () -> Unit) {
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp),
                     shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Surface)
+                    // FIX: usaba Surface hardcodeado
+                    colors = CardDefaults.cardColors(containerColor = colors.surface)
                 ) {
                     Column(
                         modifier = Modifier.padding(32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Nueva sesi\u00f3n",
-                            color = OnSurface,
+                            text = "Nueva sesión",
+                            // FIX: usaba OnSurface hardcodeado
+                            color = colors.onSurface,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.ExtraBold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "\u00bfD\u00f3nde est\u00e1s comiendo?",
-                            color = MutedForeground,
+                            text = "¿Dónde estás comiendo?",
+                            // FIX: usaba MutedForeground hardcodeado
+                            color = colors.mutedForeground,
                             fontSize = 14.sp
                         )
                         Spacer(modifier = Modifier.height(24.dp))
@@ -84,15 +88,15 @@ fun CounterScreen(onBack: () -> Unit) {
                             placeholder = {
                                 Text(
                                     "Nombre del restaurante...",
-                                    color = MutedForeground
+                                    color = colors.mutedForeground
                                 )
                             },
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Primary,
-                                unfocusedBorderColor = Border,
-                                cursorColor = Primary,
-                                focusedTextColor = OnSurface,
-                                unfocusedTextColor = OnSurface
+                                focusedBorderColor = colors.primary,
+                                unfocusedBorderColor = colors.border,
+                                cursorColor = colors.primary,
+                                focusedTextColor = colors.onSurface,
+                                unfocusedTextColor = colors.onSurface
                             ),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth(),
@@ -108,34 +112,28 @@ fun CounterScreen(onBack: () -> Unit) {
                             Button(
                                 onClick = onBack,
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Secondary,
-                                    contentColor = OnSecondary
+                                    containerColor = colors.secondary,
+                                    contentColor = colors.onSecondary
                                 ),
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(48.dp)
                             ) {
-                                Text(
-                                    text = "Cancelar",
-                                    fontWeight = FontWeight.Bold
-                                )
+                                Text(text = "Cancelar", fontWeight = FontWeight.Bold)
                             }
                             Button(
                                 onClick = { phase = CounterPhase.COUNTING },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Primary,
-                                    contentColor = OnPrimary
+                                    containerColor = colors.primary,
+                                    contentColor = colors.onPrimary
                                 ),
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(48.dp)
                             ) {
-                                Text(
-                                    text = "Empezar",
-                                    fontWeight = FontWeight.Bold
-                                )
+                                Text(text = "Empezar", fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -147,7 +145,7 @@ fun CounterScreen(onBack: () -> Unit) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Background)
+                    .background(colors.background)
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     Row(
@@ -162,19 +160,19 @@ fun CounterScreen(onBack: () -> Unit) {
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(Secondary)
+                                .background(colors.secondary)
                         ) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Volver",
-                                tint = OnSecondary,
+                                tint = colors.onSecondary,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
 
                         Text(
                             text = restaurant.ifEmpty { "Sin nombre" },
-                            color = OnBackground,
+                            color = colors.onBackground,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.ExtraBold,
                             modifier = Modifier.weight(1f)
@@ -183,19 +181,19 @@ fun CounterScreen(onBack: () -> Unit) {
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(50))
-                                .background(Primary.copy(alpha = 0.2f))
+                                .background(colors.primary.copy(alpha = 0.2f))
                                 .padding(horizontal = 12.dp, vertical = 4.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     text = "Total: ",
-                                    color = Primary,
+                                    color = colors.primary,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = "$totalPieces",
-                                    color = Primary,
+                                    color = colors.primary,
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.ExtraBold
                                 )
@@ -234,14 +232,14 @@ fun CounterScreen(onBack: () -> Unit) {
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .background(Background.copy(alpha = 0.95f))
+                        .background(colors.background.copy(alpha = 0.95f))
                         .padding(16.dp)
                 ) {
                     Button(
                         onClick = { phase = CounterPhase.CONFIRM_SAVE },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Secondary,
-                            contentColor = OnSecondary
+                            containerColor = colors.secondary,
+                            contentColor = colors.onSecondary
                         ),
                         shape = RoundedCornerShape(50),
                         modifier = Modifier
@@ -249,13 +247,13 @@ fun CounterScreen(onBack: () -> Unit) {
                             .height(56.dp)
                     ) {
                         Text(
-                            text = "TERMINAR SESI\u00d3N",
+                            text = "TERMINAR SESIÓN",
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(
-                            Icons.Filled.Star,
+                            Icons.Filled.Add,
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )
@@ -268,7 +266,8 @@ fun CounterScreen(onBack: () -> Unit) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Background),
+                    // FIX: usaba Background hardcodeado
+                    .background(colors.background),
                 contentAlignment = Alignment.Center
             ) {
                 Card(
@@ -276,28 +275,31 @@ fun CounterScreen(onBack: () -> Unit) {
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp),
                     shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Surface)
+                    // FIX: usaba Surface hardcodeado
+                    colors = CardDefaults.cardColors(containerColor = colors.surface)
                 ) {
                     Column(
                         modifier = Modifier.padding(32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "\u00bfTerminar sesi\u00f3n?",
-                            color = OnSurface,
+                            text = "¿Terminar sesión?",
+                            // FIX: usaba OnSurface hardcodeado
+                            color = colors.onSurface,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.ExtraBold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "$totalPieces",
-                            color = Primary,
+                            color = colors.primary,
                             fontSize = 48.sp,
                             fontWeight = FontWeight.ExtraBold
                         )
                         Text(
                             text = "piezas en total",
-                            color = MutedForeground,
+                            // FIX: usaba MutedForeground hardcodeado
+                            color = colors.mutedForeground,
                             fontSize = 14.sp
                         )
                         Spacer(modifier = Modifier.height(24.dp))
@@ -309,8 +311,8 @@ fun CounterScreen(onBack: () -> Unit) {
                             Button(
                                 onClick = { phase = CounterPhase.COUNTING },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Secondary,
-                                    contentColor = OnSecondary
+                                    containerColor = colors.secondary,
+                                    contentColor = colors.onSecondary
                                 ),
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
@@ -333,8 +335,8 @@ fun CounterScreen(onBack: () -> Unit) {
                                     onBack()
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Primary,
-                                    contentColor = OnPrimary
+                                    containerColor = colors.primary,
+                                    contentColor = colors.onPrimary
                                 ),
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier

@@ -11,6 +11,7 @@ composeBom = "2024.09.00"
 firebaseAnnotations = "17.0.0"
 navigationCompose = "2.9.7"
 firebaseCrashlyticsBuildtools = "3.0.6"
+playServicesCastFramework = "22.3.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -30,6 +31,7 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 firebase-annotations = { group = "com.google.firebase", name = "firebase-annotations", version.ref = "firebaseAnnotations" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 firebase-crashlytics-buildtools = { group = "com.google.firebase", name = "firebase-crashlytics-buildtools", version.ref = "firebaseCrashlyticsBuildtools" }
+play-services-cast-framework = { group = "com.google.android.gms", name = "play-services-cast-framework", version.ref = "playServicesCastFramework" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

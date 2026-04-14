@@ -1,59 +1,56 @@
 package pls.dev.sushitracker.ui.screens
 
+import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pls.dev.sushitracker.data.SessionRecord
-import pls.dev.sushitracker.ui.theme.*
 import pls.dev.sushitracker.data.SessionStorage
+import pls.dev.sushitracker.ui.theme.*
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-
-enum class HistoryTab { HISTORIAL, RANKING }
+import java.time.temporal.ChronoUnit
+import kotlin.collections.filter
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HistoryScreen(onBack: () -> Unit) {
+fun HistoryScreen(
+    colors: SushiColors,
+    onBack: () -> Unit
+) {
     val context = LocalContext.current
-    val storage = remember { SessionStorage(context) }
-
-    var tab by remember { mutableStateOf(HistoryTab.HISTORIAL) }
-    var sessions by remember { mutableStateOf(storage.getSessions()) }
-    var ranking by remember { mutableStateOf(storage.getRanking(10)) }
-    var selectedSession by remember { mutableStateOf<SessionRecord?>(null) }
-
-    selectedSession?.let { session ->
-        SessionDetailScreen(
-            session = session,
-            onBack = { selectedSession = null }
-        )
-        return
-    }
+    val sessionManager = remember { SessionStorage(context) }
+    var sessions by remember { mutableStateOf(sessionManager.getSessions()) }
+    var expandedSessionId by remember { mutableStateOf<String?>(null) }
+    var showDeleteDialog by remember { mutableStateOf<SessionRecord?>(null) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Background)
+            .background(colors.background)
     ) {
         Row(
             modifier = Modifier
@@ -67,283 +64,388 @@ fun HistoryScreen(onBack: () -> Unit) {
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(Secondary)
+                    .background(colors.secondary)
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Volver",
-                    tint = OnSecondary,
+                    tint = colors.onSecondary,
                     modifier = Modifier.size(20.dp)
                 )
             }
             Text(
-                text = "Historial / Ranking",
-                color = OnBackground,
+                text = "Historial",
+                color = colors.onBackground,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold,
                 modifier = Modifier.weight(1f)
             )
-        }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 16.dp)
-                .clip(RoundedCornerShape(50))
-                .background(Secondary)
-                .padding(4.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(50))
-                    .background(if (tab == HistoryTab.HISTORIAL) Primary else Color.Transparent)
-                    .clickable { tab = HistoryTab.HISTORIAL }
-                    .padding(vertical = 10.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "HISTORIAL",
-                    color = if (tab == HistoryTab.HISTORIAL) OnPrimary else OnSecondary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(50))
-                    .background(if (tab == HistoryTab.RANKING) Primary else Color.Transparent)
-                    .clickable { tab = HistoryTab.RANKING }
-                    .padding(vertical = 10.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "RANKING",
-                    color = if (tab == HistoryTab.RANKING) OnPrimary else OnSecondary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-            }
-        }
-
-        when (tab) {
-            HistoryTab.HISTORIAL -> {
-                if (sessions.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                Icons.Filled.DateRange,
-                                contentDescription = null,
-                                tint = MutedForeground.copy(alpha = 0.4f),
-                                modifier = Modifier.size(64.dp)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Sin sesiones",
-                                color = MutedForeground,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Comienza una sesi\u00f3n para ver tu historial",
-                                color = MutedForeground.copy(alpha = 0.7f),
-                                fontSize = 14.sp
-                            )
-                        }
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(bottom = 24.dp)
-                    ) {
-                        itemsIndexed(sessions) { _, session ->
-                            val formattedDate = formatSessionDate(session.date)
-
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { selectedSession = session },
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Surface)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = formattedDate,
-                                            color = MutedForeground,
-                                            fontSize = 14.sp
-                                        )
-                                        Text(
-                                            text = session.restaurant,
-                                            color = OnSurface,
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(50))
-                                            .background(Primary.copy(alpha = 0.2f))
-                                            .padding(horizontal = 12.dp, vertical = 6.dp)
-                                    ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(
-                                                text = "${session.totalPieces}",
-                                                color = Primary,
-                                                fontSize = 18.sp,
-                                                fontWeight = FontWeight.ExtraBold
-                                            )
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            Text(
-                                                text = "pzs",
-                                                color = Primary,
-                                                fontSize = 12.sp
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            HistoryTab.RANKING -> {
-                if (ranking.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                Icons.Filled.Person,
-                                contentDescription = null,
-                                tint = MutedForeground.copy(alpha = 0.4f),
-                                modifier = Modifier.size(64.dp)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Sin datos de ranking",
-                                color = MutedForeground,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Completa sesiones para ver tu ranking",
-                                color = MutedForeground.copy(alpha = 0.7f),
-                                fontSize = 14.sp
-                            )
-                        }
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(bottom = 24.dp)
-                    ) {
-                        itemsIndexed(ranking) { index, session ->
-                            val formattedDate = formatSessionDate(session.date)
-                            val medalColor = getMedalColor(index)
-                            val medalBgAlpha = if (index < 3) 0.1f else 0f
-
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { selectedSession = session },
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = if (index < 3) medalColor.copy(alpha = medalBgAlpha) else Surface
-                                ),
-                                border = if (index < 3) {
-                                    CardDefaults.outlinedCardBorder().copy(
-                                    )
-                                } else null
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .then(
-                                            if (index < 3) {
-                                                Modifier.background(
-                                                    medalColor.copy(alpha = 0.1f),
-                                                    RoundedCornerShape(16.dp)
-                                                )
-                                            } else Modifier
-                                        )
-                                        .padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(CircleShape)
-                                            .background(
-                                                if (index < 3) medalColor else Secondary
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = "${index + 1}",
-                                            color = if (index < 3) Background else OnSecondary,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            fontSize = 14.sp
-                                        )
-                                    }
-
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "$formattedDate - ${session.restaurant}",
-                                            color = MutedForeground,
-                                            fontSize = 14.sp
-                                        )
-                                        Text(
-                                            text = "${session.totalPieces} piezas",
-                                            color = OnBackground,
-                                            fontSize = 18.sp,
-                                            fontWeight = FontWeight.ExtraBold
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
+            if (sessions.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(colors.primary.copy(alpha = 0.2f))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "${sessions.size} sesiones",
+                        color = colors.primary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         }
+
+        if (sessions.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.Delete,
+                        contentDescription = null,
+                        tint = colors.mutedForeground,
+                        modifier = Modifier.size(64.dp)
+                    )
+                    Text(
+                        text = "Sin historial",
+                        color = colors.onBackground,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Completa tu primera sesión\npara ver tu historial aqui",
+                        color = colors.mutedForeground,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 24.dp)
+            ) {
+                items(sessions, key = { it.id }) { session ->
+                    SessionHistoryCard(
+                        session = session,
+                        isExpanded = expandedSessionId == session.id,
+                        colors = colors,
+                        onToggleExpand = {
+                            expandedSessionId = if (expandedSessionId == session.id) null else session.id
+                        },
+                        onShare = {
+                            shareSession(context, session)
+                        },
+                        onDelete = {
+                            showDeleteDialog = session
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    showDeleteDialog?.let { session ->
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = null },
+            containerColor = colors.surface,
+            title = {
+                Text(
+                    "¿Eliminar sesion?",
+                    color = colors.onSurface,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    "Se eliminara la sesion del ${formatDate(session.date)} con ${session.totalPieces} piezas.",
+                    color = colors.mutedForeground
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        sessionManager.deleteSession(session.id)
+                        sessions = sessionManager.getSessions()
+                        showDeleteDialog = null
+                    }
+                ) {
+                    Text("Eliminar", color = colors.primary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = null }) {
+                    Text("Cancelar", color = colors.mutedForeground)
+                }
+            }
+        )
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-private fun formatSessionDate(dateStr: String): String {
-    return try {
-        val dateTime = LocalDateTime.parse(dateStr, DateTimeFormatter.ISO_DATE_TIME)
-        dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-    } catch (e: Exception) {
-        dateStr
+@Composable
+private fun SessionHistoryCard(
+    session: SessionRecord,
+    isExpanded: Boolean,
+    colors: SushiColors,
+    onToggleExpand: () -> Unit,
+    onShare: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val totalPieces = session.totalPieces
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.surface)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onToggleExpand)
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(
+                            when {
+                                totalPieces >= 50 -> Gold.copy(alpha = 0.2f)
+                                totalPieces >= 30 -> colors.primary.copy(alpha = 0.2f)
+                                else -> colors.secondary
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "🍣",
+                        fontSize = 24.sp
+                    )
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = formatDate(session.date),
+                        color = colors.onSurface,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = session.restaurant,
+                        color = colors.mutedForeground,
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        text = getRelativeDate(session.date),
+                        color = colors.mutedForeground,
+                        fontSize = 12.sp
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = totalPieces.toString(),
+                        color = when {
+                            totalPieces >= 50 -> Gold
+                            totalPieces >= 30 -> colors.primary
+                            else -> colors.onSurface
+                        },
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Text(
+                        text = "piezas",
+                        color = colors.mutedForeground,
+                        fontSize = 11.sp
+                    )
+                }
+
+                Icon(
+                    imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                    contentDescription = if (isExpanded) "Colapsar" else "Expandir",
+                    tint = colors.mutedForeground,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = colors.border
+                    )
+
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        session.pieces
+                            .filter { it.value > 0 }
+                            .forEach { piece ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = getPieceEmoji(piece.key),
+                                            fontSize = 16.sp
+                                        )
+                                        Text(
+                                            text = piece.key.replaceFirstChar { it.uppercase() },
+                                            color = colors.onSurface,
+                                            fontSize = 14.sp
+                                        )
+                                    }
+                                    Text(
+                                        text = "${piece.value}",
+                                        color = colors.primary,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = onShare,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = colors.primary
+                            )
+                        ) {
+                            Icon(
+                                Icons.Filled.Share,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Compartir", fontSize = 13.sp)
+                        }
+
+                        OutlinedButton(
+                            onClick = onDelete,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                        ) {
+                            Icon(
+                                Icons.Filled.Delete,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Eliminar", fontSize = 13.sp)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
-private fun getMedalColor(index: Int): Color {
-    return when (index) {
-        0 -> Gold
-        1 -> Silver
-        2 -> Bronze
-        else -> Secondary
+private fun getPieceEmoji(type: String): String {
+    return when (type.lowercase()) {
+        "nigiri" -> "🍣"
+        "sashimi" -> "🥢"
+        "maki" -> "🍙"
+        "temaki" -> "📜"
+        "gyoza" -> "🥟"
+        "otro" -> "🍽️"
+        else -> "🍱"
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+internal fun formatDate(dateString: String): String {
+    return try {
+        val date = try {
+            LocalDateTime.parse(dateString, DateTimeFormatter.ISO_DATE_TIME).toLocalDate()
+        } catch (e: Exception) {
+            LocalDate.parse(dateString)
+        }
+        val formatter = DateTimeFormatter.ofPattern("d 'de' MMMM, yyyy", java.util.Locale("es", "ES"))
+        date.format(formatter)
+    } catch (e: Exception) {
+        dateString
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+private fun getRelativeDate(dateString: String): String {
+    return try {
+        val date = try {
+            LocalDateTime.parse(dateString, DateTimeFormatter.ISO_DATE_TIME).toLocalDate()
+        } catch (e: Exception) {
+            LocalDate.parse(dateString)
+        }
+        val today = LocalDate.now()
+        val daysBetween = ChronoUnit.DAYS.between(date, today)
+
+        when {
+            daysBetween == 0L -> "Hoy"
+            daysBetween == 1L -> "Ayer"
+            daysBetween < 7 -> "Hace $daysBetween dias"
+            daysBetween < 30 -> "Hace ${daysBetween / 7} semanas"
+            else -> "Hace ${daysBetween / 30} meses"
+        }
+    } catch (e: Exception) {
+        ""
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+private fun shareSession(context: android.content.Context, session: SessionRecord) {
+    val totalPieces = session.totalPieces
+    val text = buildString {
+        appendLine("🍣 Mi sesión de sushi")
+        appendLine("📅 ${formatDate(session.date)}")
+        appendLine("🏠 ${session.restaurant}")
+        appendLine()
+        appendLine("Total: $totalPieces piezas")
+        appendLine()
+        session.pieces
+            .filter { it.value > 0 }
+            .forEach { piece ->
+                appendLine("${getPieceEmoji(piece.key)} ${piece.key.replaceFirstChar { it.uppercase() }}: ${piece.value}")
+            }
+        appendLine()
+        appendLine("Registrado con Sushi Tracker 🍣")
+    }
+
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_SUBJECT, "Mi sesion de sushi - ${formatDate(session.date)}")
+        putExtra(Intent.EXTRA_TEXT, text)
+    }
+    context.startActivity(Intent.createChooser(intent, "Compartir sesión"))
 }

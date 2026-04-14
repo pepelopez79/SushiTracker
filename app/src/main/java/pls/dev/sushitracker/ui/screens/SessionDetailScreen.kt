@@ -23,8 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pls.dev.sushitracker.data.SUSHI_PIECES
-import pls.dev.sushitracker.ui.theme.*
 import pls.dev.sushitracker.data.SessionRecord
+import pls.dev.sushitracker.ui.theme.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
