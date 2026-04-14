@@ -6,7 +6,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import androidx.core.content.edit
 
-enum class AppTheme(val id: String, val displayName: Map<AppLanguage, String>) {
+enum class AppTheme(val id: String, mapOf: Map<AppLanguage, String>) {
     DARK(
         "dark",
         mapOf(

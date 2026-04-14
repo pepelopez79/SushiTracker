@@ -12,13 +12,24 @@ data class Achievement(
     val requirement: AchievementRequirement
 )
 
+data class AchievementProgress(
+    val current: Int,
+    val target: Int,
+    val isComplete: Boolean
+) {
+    val displayCurrent: Int get() = if (isComplete) target else current
+
+    val percentage: Float get() = (displayCurrent.toFloat() / target).coerceIn(0f, 1f)
+}
+
+data class AchievementWithStatus(
+    val achievement: Achievement,
+    val isUnlocked: Boolean,
+    val progress: AchievementProgress
+)
+
 enum class AchievementCategory {
-    TOTAL_PIECES,
-    SESSION_PIECES,
-    SPECIFIC_PIECE,
-    SESSIONS_COUNT,
-    VARIETY,
-    SPECIAL
+    TOTAL_PIECES, SESSION_PIECES, SPECIFIC_PIECE, SESSIONS_COUNT, VARIETY, SPECIAL
 }
 
 sealed class AchievementRequirement {

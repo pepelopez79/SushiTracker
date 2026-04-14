@@ -115,7 +115,7 @@ fun SettingsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            AppTheme.values().forEach { theme ->
+                            AppTheme.entries.forEach { theme ->
                                 ThemeOption(
                                     theme = theme,
                                     isSelected = currentTheme == theme,
@@ -231,7 +231,6 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        // FIX: antes solo llamaba getSessions() sin borrar nada; ahora borra todo
                         sessionManager.deleteAllSessions()
                         showResetDialog = false
                         Toast.makeText(context, "Datos eliminados", Toast.LENGTH_SHORT).show()
@@ -386,7 +385,6 @@ private fun SettingsItem(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            // FIX: icono destructivo en rojo para reflejar la acción peligrosa
             tint = if (isDestructive) MaterialTheme.colorScheme.error else colors.mutedForeground,
             modifier = Modifier.size(24.dp)
         )
@@ -394,7 +392,6 @@ private fun SettingsItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                // FIX: texto destructivo en rojo
                 color = if (isDestructive) MaterialTheme.colorScheme.error else colors.onSurface,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium
@@ -428,7 +425,6 @@ private fun generateExportText(sessionManager: SessionStorage): String {
         appendLine("================================")
         appendLine()
         appendLine("📊 RESUMEN GENERAL")
-        // FIX: todos los valores usan los campos correctos del StatsResult
         appendLine("• Total de piezas: ${stats.total}")
         appendLine("• Sesiones completadas: ${stats.sessionCount}")
         appendLine("• Promedio por sesion: ${String.format("%.1f", stats.avgPerSession)}")
@@ -468,7 +464,6 @@ private fun generateExportJson(sessionManager: SessionStorage): String {
         appendLine("  \"appName\": \"Sushi Tracker\",")
         appendLine("  \"exportDate\": \"${java.time.LocalDate.now()}\",")
         appendLine("  \"statistics\": {")
-        // FIX: todos los valores usan los campos correctos del StatsResult
         appendLine("    \"totalPieces\": ${stats.total},")
         appendLine("    \"totalSessions\": ${stats.sessionCount},")
         appendLine("    \"averagePerSession\": ${String.format("%.2f", stats.avgPerSession)},")

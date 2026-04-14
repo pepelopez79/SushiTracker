@@ -20,9 +20,7 @@
     <string name="confirm_message">Guardar sesión con %d piezas en %s?</string>
     
     <string name="tab_history">HISTORIAL</string>
-    <string name="tab_ranking">RANKING</string>
     <string name="history_empty">No hay sesiones registradas</string>
-    <string name="ranking_empty">Aun no hay datos para el ranking</string>
     <string name="pieces_label">%d piezas</string>
     <string name="pieces_with_restaurant">%d piezas - %s</string>
     
@@ -53,7 +51,4 @@
     <string name="cd_back">Volver atras</string>
     <string name="cd_sushi_image">Imagen de %s</string>
     <string name="cd_count">Cantidad: %d</string>
-    <string name="cd_medal_gold">Medalla de oro</string>
-    <string name="cd_medal_silver">Medalla de plata</string>
-    <string name="cd_medal_bronze">Medalla de bronce</string>
 </resources>

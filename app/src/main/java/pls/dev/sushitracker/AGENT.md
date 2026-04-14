@@ -335,9 +335,6 @@ val MutedForeground = Color(0xFF94A3B3) // Gris claro
 val Border = Color(0xFF394959)
 val ItemBg = Color(0xFFFFFFFF)          // Blanco (items sushi)
 val ItemFg = Color(0xFF1A1A1A)          // Negro (texto items)
-val Gold = Color(0xFFF5B800)            // Medalla oro
-val Silver = Color(0xFFBFBFBF)          // Medalla plata
-val Bronze = Color(0xFFC87533)          // Medalla bronce
 ```
 
 ### Type.kt
@@ -418,17 +415,6 @@ fun getRanking(limit: Int = 10): List<SessionRecord> {
         .take(limit)
 }
 ```
-
-### Medallas del Ranking
-
-| Posicion | Color | Icono |
-|----------|-------|-------|
-| 1 | Gold (#F5B800) | Corona o "1" |
-| 2 | Silver (#BFBFBF) | "2" |
-| 3 | Bronze (#C87533) | "3" |
-| 4-10 | Card (#2A3A4A) | Numero |
-
----
 
 ## Estructura de Archivos
 

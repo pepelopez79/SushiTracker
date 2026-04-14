@@ -17,7 +17,3 @@ val Destructive = Color(0xFFEF4444)
 
 val ItemBackground = Color(0xFFFFFFFF)
 val ItemForeground = Color(0xFF1A1A1A)
-
-val Gold = Color(0xFFF5B800)
-val Silver = Color(0xFFBFBFBF)
-val Bronze = Color(0xFFC87533)

@@ -8,6 +8,8 @@
  * app/src/main/
  * ├── java/pls/dev/sushitracker/
  * │   ├── data/
+ * │   │   ├── Achievement.kt
+ * │   │   ├── AchievementManager.kt
  * │   │   ├── SushiPiece.kt
  * │   │   ├── SessionRecord.kt
  * │   │   └── SessionStorage.kt
@@ -15,18 +17,28 @@
  * │   │   ├── theme/
  * │   │   │   ├── Color.kt
  * │   │   │   ├── Type.kt
+ * │   │   │   ├── ThemeColors.kt
  * │   │   │   └── Theme.kt
  * │   │   ├── screens/
+ * │   │   │   ├── AchievementsScreen.kt
  * │   │   │   ├── SplashScreen.kt
  * │   │   │   ├── HomeScreen.kt
  * │   │   │   ├── CounterScreen.kt
  * │   │   │   ├── HistoryScreen.kt
+ * │   │   │   ├── SettingsScreen.kt
  * │   │   │   ├── SessionDetailScreen.kt
  * │   │   │   └── StatsScreen.kt
  * │   │   ├── components/
+ * │   │   │   ├── ExportDialog.kt
+ * │   │   │   ├── ShareDialog.kt
  * │   │   │   └── PieceCounterItem.kt
  * │   │   └── navigation/
  * │   │       └── NavGraph.kt
+ * │   ├── utils/
+ * │   │   ├── ExportUtils.kt
+ * │   │   └── ShareUtils.kt
+ * │   ├── AGENT.md
+ * │   ├── ASSETS_GUIDE.md
  * │   └── MainActivity.kt
  * └── res/
  *     ├── drawable/
@@ -43,6 +55,7 @@
  *     │   ├── edamame.jpg
  *     │   └── takoyaki.jpg
  *     └── values/
+ *         ├── colors.xml
  *         └── strings.xml
  *
  * ============================================================
@@ -63,9 +76,6 @@
  *  Destructive         hsl(0, 84%, 60%)        #EF4444     Errores, restar pieza
  *  ItemBg              hsl(0, 0%, 100%)        #FFFFFF     Fondo items de sushi
  *  ItemFg              hsl(0, 0%, 10%)         #1A1A1A     Texto items de sushi
- *  Gold                hsl(43, 96%, 56%)       #F5B800     Medalla 1er puesto
- *  Silver              hsl(0, 0%, 75%)         #BFBFBF     Medalla 2do puesto
- *  Bronze              hsl(25, 57%, 50%)       #C87533     Medalla 3er puesto
  *
  * ============================================================
  *  TIPOGRAFIA
@@ -101,7 +111,7 @@
  *  IMAGENES DE SUSHI
  * ============================================================
  *
- *  Las imagenes estan en: res/drawable/
+ *  Las imagenes están en: res/drawable/
  *  Nombres:
  *    nigiri.jpg, sashimi.jpg, maki.jpg, uramaki.jpg,
  *    gunkan.jpg, temaki.jpg, gyoza.jpg, tempura.jpg,

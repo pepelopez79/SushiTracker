@@ -32,26 +32,14 @@ class SessionStorage(context: Context) {
         prefs.edit { putString(key, gson.toJson(sessions)) }
     }
 
-    // FIX: método que faltaba — sin esto el borrado no funcionaba
     fun deleteSession(id: String) {
         val sessions = getSessions().toMutableList()
         sessions.removeAll { it.id == id }
         prefs.edit { putString(key, gson.toJson(sessions)) }
     }
 
-    // FIX: método que faltaba — necesario para "Borrar todos los datos" en Settings
     fun deleteAllSessions() {
         prefs.edit { remove(key) }
-    }
-
-    fun getSessionById(id: String): SessionRecord? {
-        return getSessions().find { it.id == id }
-    }
-
-    fun getRanking(limit: Int = 10): List<SessionRecord> {
-        return getSessions()
-            .sortedByDescending { it.totalPieces }
-            .take(limit)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -92,7 +80,6 @@ class SessionStorage(context: Context) {
             }
         }
 
-        // FIX: calcular promedio y récord correctamente aquí, donde tenemos acceso a filtered
         val avgPerSession = if (filtered.isNotEmpty()) total.toDouble() / filtered.size else 0.0
         val maxInSession = filtered.maxOfOrNull { it.totalPieces } ?: 0
 
@@ -107,7 +94,6 @@ enum class StatsFilter {
 data class StatsResult(
     val pieceStats: Map<String, Int>,
     val total: Int,
-    // FIX: campos nuevos para no tener que recalcular (evitaba bugs por usar pieceStats como Int)
     val sessionCount: Int = 0,
     val avgPerSession: Double = 0.0,
     val maxInSession: Int = 0

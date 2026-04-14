@@ -11,7 +11,6 @@ Aplicacion Android nativa para contabilizar piezas de sushi y comida japonesa co
 - Contar piezas por tipo con un simple tap (sumar) o long-press (restar)
 - Guardar sesiones con fecha y nombre del restaurante
 - Ver el historial completo de todas las visitas
-- Consultar un ranking de las 10 sesiones con mas piezas consumidas
 - Analizar estadisticas por periodo (semana, mes, ano, total)
 
 ---
@@ -24,7 +23,7 @@ Pantalla de bienvenida con el logo de la app y animacion de entrada. Duracion: 2
 ### 2. Home Screen (Pantalla Principal)
 Menu principal con tres botones:
 - **Comenzar Sesion**: Inicia una nueva sesion de conteo
-- **Historial / Ranking**: Accede al historial y ranking
+- **Historial**: Accede al historial
 - **Estadisticas**: Consulta estadisticas acumuladas
 
 ### 3. Counter Screen (Contador)
@@ -36,7 +35,6 @@ Flujo de 3 fases:
 ### 4. History Screen (Historial)
 Dos tabs:
 - **Historial**: Lista cronologica de todas las sesiones (fecha, restaurante, total piezas). Al pulsar una sesion se abre el detalle
-- **Ranking**: Top 10 sesiones con mas piezas, con medallas oro/plata/bronce para los 3 primeros puestos
 
 ### 5. Session Detail Screen (Detalle)
 Desglose de una sesion mostrando cada tipo de pieza y la cantidad consumida.
@@ -188,13 +186,9 @@ Conectar un dispositivo o usar un emulador y ejecutar la app.
 6. Confirma para guardar
 
 ### Ver historial
-1. Desde Home, pulsa "Historial / Ranking"
+1. Desde Home, pulsa "Historial"
 2. En la pestana "Historial" ves todas las sesiones
 3. Pulsa una sesion para ver el desglose
-
-### Ver ranking
-1. Desde Historial, pulsa la pestana "Ranking"
-2. Ves el top 10 con medallas para los 3 primeros
 
 ### Ver estadisticas
 1. Desde Home, pulsa "Estadisticas"
@@ -213,9 +207,6 @@ Conectar un dispositivo o usar un emulador y ejecutar la app.
 | Secondary | `#3D4D5C` | Botones secundarios |
 | Foreground | `#FFFFFF` | Texto principal |
 | Muted | `#94A3B3` | Texto secundario |
-| Gold | `#F5B800` | 1er puesto |
-| Silver | `#BFBFBF` | 2do puesto |
-| Bronze | `#C87533` | 3er puesto |
 
 ---
 

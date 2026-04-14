@@ -222,13 +222,8 @@ private fun SessionHistoryCard(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(
-                            when {
-                                totalPieces >= 50 -> Gold.copy(alpha = 0.2f)
-                                totalPieces >= 30 -> colors.primary.copy(alpha = 0.2f)
-                                else -> colors.secondary
-                            }
-                        ),
+                        .background(colors.primary.copy(alpha = 0.2f)
+                    ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -259,11 +254,7 @@ private fun SessionHistoryCard(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = totalPieces.toString(),
-                        color = when {
-                            totalPieces >= 50 -> Gold
-                            totalPieces >= 30 -> colors.primary
-                            else -> colors.onSurface
-                        },
+                        color = colors.primary,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.ExtraBold
                     )

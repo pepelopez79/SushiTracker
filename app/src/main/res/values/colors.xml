@@ -14,11 +14,7 @@
     <color name="card_background">#FFFFFFFF</color>
     <color name="card_text">#FF1E293B</color>
     <color name="divider">#FF334155</color>
-    
-    <color name="gold">#FFFFD700</color>
-    <color name="silver">#FFC0C0C0</color>
-    <color name="bronze">#FFCD7F32</color>
-    
+
     <color name="success">#FF22C55E</color>
     <color name="warning">#FFFBBF24</color>
     <color name="error">#FFEF4444</color>

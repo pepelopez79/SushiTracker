@@ -50,7 +50,6 @@ fun CounterScreen(onBack: () -> Unit, colors: SushiColors) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    // FIX: usaba Background hardcodeado; ahora respeta el tema activo
                     .background(colors.background),
                 contentAlignment = Alignment.Center
             ) {
@@ -59,7 +58,6 @@ fun CounterScreen(onBack: () -> Unit, colors: SushiColors) {
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp),
                     shape = RoundedCornerShape(24.dp),
-                    // FIX: usaba Surface hardcodeado
                     colors = CardDefaults.cardColors(containerColor = colors.surface)
                 ) {
                     Column(
@@ -68,7 +66,6 @@ fun CounterScreen(onBack: () -> Unit, colors: SushiColors) {
                     ) {
                         Text(
                             text = "Nueva sesión",
-                            // FIX: usaba OnSurface hardcodeado
                             color = colors.onSurface,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.ExtraBold
@@ -76,7 +73,6 @@ fun CounterScreen(onBack: () -> Unit, colors: SushiColors) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "¿Dónde estás comiendo?",
-                            // FIX: usaba MutedForeground hardcodeado
                             color = colors.mutedForeground,
                             fontSize = 14.sp
                         )
@@ -266,7 +262,6 @@ fun CounterScreen(onBack: () -> Unit, colors: SushiColors) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    // FIX: usaba Background hardcodeado
                     .background(colors.background),
                 contentAlignment = Alignment.Center
             ) {
@@ -275,7 +270,6 @@ fun CounterScreen(onBack: () -> Unit, colors: SushiColors) {
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp),
                     shape = RoundedCornerShape(24.dp),
-                    // FIX: usaba Surface hardcodeado
                     colors = CardDefaults.cardColors(containerColor = colors.surface)
                 ) {
                     Column(
@@ -284,7 +278,6 @@ fun CounterScreen(onBack: () -> Unit, colors: SushiColors) {
                     ) {
                         Text(
                             text = "¿Terminar sesión?",
-                            // FIX: usaba OnSurface hardcodeado
                             color = colors.onSurface,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.ExtraBold
@@ -298,7 +291,6 @@ fun CounterScreen(onBack: () -> Unit, colors: SushiColors) {
                         )
                         Text(
                             text = "piezas en total",
-                            // FIX: usaba MutedForeground hardcodeado
                             color = colors.mutedForeground,
                             fontSize = 14.sp
                         )

@@ -89,7 +89,6 @@ fun StatsScreen(
             }
         }
 
-        // FIX: condición correcta — antes usaba stats.total que es total de piezas, no sesiones
         if (stats.sessionCount == 0) {
             Box(
                 modifier = Modifier
@@ -169,7 +168,6 @@ fun StatsScreen(
                             colors = colors,
                             modifier = Modifier.weight(1f)
                         )
-                        // FIX: usaba stats.pieceStats (un Map) como Double para format; ahora usa avgPerSession
                         StatCard(
                             icon = Icons.Filled.Add,
                             value = String.format("%.1f", stats.avgPerSession),
@@ -181,7 +179,7 @@ fun StatsScreen(
                             icon = Icons.Filled.Add,
                             value = stats.maxInSession.toString(),
                             label = "Record",
-                            iconTint = Gold,
+                            iconTint = colors.primary,
                             colors = colors,
                             modifier = Modifier.weight(1f)
                         )
@@ -255,7 +253,7 @@ fun StatsScreen(
                                 favoriteType?.let {
                                     CuriosityItem(
                                         emoji = getPieceEmoji(it.key),
-                                        text = "Tu favorito es el ${it.key}",
+                                        text = "Lo que más has comido: ${it.key}",
                                         colors = colors
                                     )
                                 }
@@ -415,7 +413,6 @@ private fun shareStats(context: android.content.Context, sessionManager: Session
         appendLine("=====================================")
         appendLine()
         appendLine("📊 RESUMEN")
-        // FIX: todos los campos usan los valores correctos del StatsResult
         appendLine("• Total de piezas: ${stats.total}")
         appendLine("• Sesiones completadas: ${stats.sessionCount}")
         appendLine("• Promedio por sesion: ${String.format("%.1f", stats.avgPerSession)}")
