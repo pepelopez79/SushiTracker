@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -23,6 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pls.dev.sushitracker.data.*
@@ -102,6 +105,7 @@ fun SettingsScreen(
                                     theme = theme,
                                     isSelected = currentTheme == theme,
                                     colors = colors,
+                                    strings = strings,
                                     onClick = { onThemeChange(theme) },
                                     modifier = Modifier.weight(1f)
                                 )
@@ -219,6 +223,7 @@ fun SettingsScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CustomPiecesDialog(
     colors: SushiColors,
@@ -232,93 +237,143 @@ private fun CustomPiecesDialog(
     var newEmoji by remember { mutableStateOf("🍱") }
     var showNameError by remember { mutableStateOf(false) }
     var deleteTarget by remember { mutableStateOf<CustomPiece?>(null) }
-    val emojiOptions = listOf("🍱", "🍣", "🥢", "🍙", "🥟", "🍜", "🥗", "🍤", "🫙", "🥡")
+    val emojiOptions = remember {
+        listOf("🍱", "🍣", "🍙", "🥟", "🍜", "🥗", "🍤", "🍢", "🍘", "🍵",
+            "🫔", "🥣", "🥡", "🫛", "🍚", "🥢", "🍲", "🍛", "🍶", "🍡")
+            .filter { android.graphics.Paint().hasGlyph(it) }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = colors.surface,
-        title = { Text(strings.customPiecesManage, color = colors.onSurface, fontWeight = FontWeight.Bold) },
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(strings.customPiecesManage, color = colors.onSurface, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text("${pieces.size}/12", color = colors.mutedForeground, fontSize = 12.sp)
+            }
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (pieces.isEmpty()) {
                     Text(strings.customPiecesEmpty, color = colors.mutedForeground, fontSize = 13.sp)
                 } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        maxItemsInEachRow = if (pieces.size > 6) 2 else 1
+                    ) {
                         pieces.forEach { piece ->
+                            val itemModifier = if (pieces.size > 6) Modifier.weight(1f) else Modifier.fillMaxWidth()
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
+                                modifier = itemModifier
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(colors.secondary)
-                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                    .padding(horizontal = 8.dp, vertical = 6.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(piece.emoji, fontSize = 20.sp)
-                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(piece.emoji, fontSize = 16.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = piece.name,
                                     color = colors.onSurface,
-                                    fontSize = 14.sp,
+                                    fontSize = 12.sp,
                                     fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
-                                IconButton(onClick = { deleteTarget = piece }, modifier = Modifier.size(32.dp)) {
+                                IconButton(onClick = { deleteTarget = piece }, modifier = Modifier.size(24.dp)) {
                                     Icon(
-                                        Icons.Filled.Delete, contentDescription = strings.delete,
-                                        tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp)
+                                        Icons.Filled.Delete, contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(14.dp)
                                     )
                                 }
                             }
                         }
                     }
                 }
-                HorizontalDivider(color = colors.border)
-                Text(strings.customPieceName, color = colors.mutedForeground, fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    emojiOptions.forEach { emoji ->
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(if (newEmoji == emoji) colors.primary.copy(alpha = 0.25f) else colors.secondary)
-                                .border(if (newEmoji == emoji) 2.dp else 0.dp, if (newEmoji == emoji) colors.primary else Color.Transparent, CircleShape)
-                                .clickable { newEmoji = emoji },
-                            contentAlignment = Alignment.Center
-                        ) { Text(emoji, fontSize = 16.sp) }
-                    }
-                }
-                OutlinedTextField(
-                    value = newName,
-                    onValueChange = { newName = it; showNameError = false },
-                    placeholder = { Text(strings.customPieceNameHint, color = colors.mutedForeground) },
-                    isError = showNameError,
-                    supportingText = if (showNameError) { { Text(strings.noPieceName, color = MaterialTheme.colorScheme.error) } } else null,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = colors.primary,
-                        unfocusedBorderColor = colors.border,
-                        cursorColor = colors.primary,
-                        focusedTextColor = colors.onSurface,
-                        unfocusedTextColor = colors.onSurface
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-                Button(
-                    onClick = {
-                        if (newName.isBlank()) { showNameError = true }
-                        else {
-                            onAdd(CustomPiece(id = "custom_${UUID.randomUUID()}", name = newName.trim(), emoji = newEmoji))
-                            newName = ""; newEmoji = "🍱"
+
+                if (pieces.size < 12) {
+                    HorizontalDivider(color = colors.border)
+                    OutlinedTextField(
+                        value = newName,
+                        onValueChange = {
+                            newName = it
+                            if (it.isNotBlank()) showNameError = false
+                        },
+                        placeholder = { Text(strings.customPieceNameHint, color = colors.mutedForeground) },
+                        isError = showNameError,
+                        supportingText = if (showNameError) {
+                            { Text(strings.noPieceName, color = MaterialTheme.colorScheme.error, fontSize = 12.sp) }
+                        } else null,
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = colors.primary,
+                            unfocusedBorderColor = colors.border,
+                            cursorColor = colors.primary,
+                            focusedTextColor = colors.onSurface,
+                            unfocusedTextColor = colors.onSurface,
+                            errorBorderColor = MaterialTheme.colorScheme.error,
+                            errorSupportingTextColor = MaterialTheme.colorScheme.error
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        emojiOptions.forEach { emoji ->
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(if (newEmoji == emoji) colors.primary.copy(alpha = 0.25f) else colors.secondary)
+                                    .border(
+                                        if (newEmoji == emoji) 2.dp else 0.dp,
+                                        if (newEmoji == emoji) colors.primary else Color.Transparent,
+                                        CircleShape
+                                    )
+                                    .clickable { newEmoji = emoji },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(emoji, fontSize = 16.sp)
+                            }
                         }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(strings.addCustomPiece, fontWeight = FontWeight.Bold)
+                    }
+
+                    Button(
+                        onClick = {
+                            if (newName.isBlank()) {
+                                showNameError = true
+                            } else {
+                                onAdd(CustomPiece(id = "custom_${UUID.randomUUID()}", name = newName.trim(), emoji = newEmoji))
+                                newName = ""
+                                newEmoji = "🍱"
+                                showNameError = false
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(strings.addCustomPiece, fontWeight = FontWeight.Bold)
+                    }
+                } else {
+                    Text(
+                        strings.customPiecesLimit,
+                        color = colors.primary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
                 }
             }
         },
@@ -330,15 +385,20 @@ private fun CustomPiecesDialog(
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
             containerColor = colors.surface,
-            title = { Text(strings.deleteCustomPiece, color = colors.onSurface, fontWeight = FontWeight.Bold) },
-            text = { Text(strings.deleteCustomPieceConfirm.format(piece.name), color = colors.mutedForeground) },
+            title = { Text(strings.delete, color = colors.onSurface, fontWeight = FontWeight.Bold) },
+            text = { Text("${strings.delete} \"${piece.name}\"?", color = colors.mutedForeground) },
             confirmButton = {
-                TextButton(onClick = { onDelete(piece.id); deleteTarget = null }) {
-                    Text(strings.delete, color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = {
+                    onDelete(piece.id)
+                    deleteTarget = null
+                }) {
+                    Text(strings.confirm, color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { deleteTarget = null }) { Text(strings.cancel, color = colors.primary) }
+                TextButton(onClick = { deleteTarget = null }) {
+                    Text(strings.cancel, color = colors.primary)
+                }
             }
         )
     }
@@ -358,7 +418,7 @@ private fun SectionLabel(text: String, colors: SushiColors) {
 
 @Composable
 private fun ThemeOption(
-    theme: AppTheme, isSelected: Boolean, colors: SushiColors,
+    theme: AppTheme, isSelected: Boolean, colors: SushiColors, strings: AppStrings.Strings,
     onClick: () -> Unit, modifier: Modifier = Modifier
 ) {
     val themeColors = getColorsForTheme(theme)
@@ -379,7 +439,7 @@ private fun ThemeOption(
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = when (theme) { AppTheme.DARK -> "Oscuro"; AppTheme.SALMON -> "Salmón"; AppTheme.LIGHT -> "Claro" },
+            text = when (theme) { AppTheme.DARK -> strings.darkTheme; AppTheme.SALMON -> strings.salmonTheme; AppTheme.LIGHT -> strings.lightTheme },
             color = if (isSelected) colors.primary else colors.onSurface,
             fontSize = 12.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium

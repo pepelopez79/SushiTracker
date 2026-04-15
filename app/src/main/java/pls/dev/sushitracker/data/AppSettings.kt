@@ -60,6 +60,9 @@ object AppStrings {
         val stats: String,
         val achievements: String,
         val settings: String,
+        val darkTheme: String,
+        val lightTheme: String,
+        val salmonTheme: String,
         val tagline: String,
         val newSession: String,
         val whereAreYouEating: String,
@@ -123,7 +126,8 @@ object AppStrings {
         val deleteCustomPiece: String,
         val deleteCustomPieceConfirm: String,
         val customPiecesManage: String,
-        val customPiecesEmpty: String
+        val customPiecesEmpty: String,
+        val customPiecesLimit: String
     )
 
     private val spanish = Strings(
@@ -142,6 +146,9 @@ object AppStrings {
         stats = "ESTADÍSTICAS",
         achievements = "LOGROS",
         settings = "Ajustes",
+        darkTheme = "Oscuro",
+        lightTheme = "Claro",
+        salmonTheme = "Salmón",
         tagline = "",
         newSession = "Nueva sesión",
         whereAreYouEating = "¿Dónde estás comiendo?",
@@ -200,12 +207,13 @@ object AppStrings {
         customPiecesSubtitle = "Añade tus propios tipos de sushi",
         addCustomPiece = "Añadir pieza",
         customPieceName = "Nombre de la pieza",
-        customPieceNameHint = "Ej: Onigiri, Takoyaki...",
+        customPieceNameHint = "Ej: ONIGIRI, FUTOMAKI...",
         noPieceName = "El nombre no puede estar vacío",
         deleteCustomPiece = "¿Eliminar pieza?",
         deleteCustomPieceConfirm = "Se eliminará \"%s\" de tus piezas personalizadas.",
         customPiecesManage = "Gestionar piezas personalizadas",
-        customPiecesEmpty = "No tienes piezas personalizadas aún"
+        customPiecesEmpty = "No tienes piezas personalizadas aún",
+        customPiecesLimit = "Límite de 12 piezas personalizadas alcanzado"
     )
 
     private val english = Strings(
@@ -224,6 +232,9 @@ object AppStrings {
         stats = "STATISTICS",
         achievements = "ACHIEVEMENTS",
         settings = "Settings",
+        darkTheme = "Dark",
+        lightTheme = "Light",
+        salmonTheme = "Salmon",
         tagline = "",
         newSession = "New session",
         whereAreYouEating = "Where are you eating?",
@@ -282,12 +293,13 @@ object AppStrings {
         customPiecesSubtitle = "Add your own sushi types",
         addCustomPiece = "Add piece",
         customPieceName = "Piece name",
-        customPieceNameHint = "E.g: Onigiri, Takoyaki...",
+        customPieceNameHint = "Ej: ONIGIRI, FUTOMAKI...",
         noPieceName = "Name cannot be empty",
         deleteCustomPiece = "Delete piece?",
         deleteCustomPieceConfirm = "\"%s\" will be removed from your custom pieces.",
         customPiecesManage = "Manage custom pieces",
-        customPiecesEmpty = "You have no custom pieces yet"
+        customPiecesEmpty = "You have no custom pieces yet",
+        customPiecesLimit = "Maximum limit of 12 custom pieces reached"
     )
 
     private val french = Strings(
@@ -306,6 +318,9 @@ object AppStrings {
         stats = "STATISTIQUES",
         achievements = "SUCCÈS",
         settings = "Paramètres",
+        darkTheme = "Sombre",
+        lightTheme = "Clair",
+        salmonTheme = "Saumon",
         tagline = "",
         newSession = "Nouvelle session",
         whereAreYouEating = "Où mangez-vous?",
@@ -364,12 +379,13 @@ object AppStrings {
         customPiecesSubtitle = "Ajoutez vos propres types de sushi",
         addCustomPiece = "Ajouter une pièce",
         customPieceName = "Nom de la pièce",
-        customPieceNameHint = "Ex: Onigiri, Takoyaki...",
+        customPieceNameHint = "Ej: ONIGIRI, FUTOMAKI...",
         noPieceName = "Le nom ne peut pas être vide",
         deleteCustomPiece = "Supprimer la pièce?",
         deleteCustomPieceConfirm = "\"%s\" sera supprimé de vos pièces personnalisées.",
         customPiecesManage = "Gérer les pièces personnalisées",
-        customPiecesEmpty = "Vous n'avez pas encore de pièces personnalisées"
+        customPiecesEmpty = "Vous n'avez pas encore de pièces personnalisées",
+        customPiecesLimit = "Limite de 12 pièces personnalisées atteinte"
     )
 
     private val italian = Strings(
@@ -388,6 +404,9 @@ object AppStrings {
         stats = "STATISTICHE",
         achievements = "OBIETTIVI",
         settings = "Impostazioni",
+        darkTheme = "Scuro",
+        lightTheme = "Chiaro",
+        salmonTheme = "Salmone",
         tagline = "",
         newSession = "Nuova sessione",
         whereAreYouEating = "Dove stai mangiando?",
@@ -446,12 +465,13 @@ object AppStrings {
         customPiecesSubtitle = "Aggiungi i tuoi tipi di sushi",
         addCustomPiece = "Aggiungi pezzo",
         customPieceName = "Nome del pezzo",
-        customPieceNameHint = "Es: Onigiri, Takoyaki...",
+        customPieceNameHint = "Ej: ONIGIRI, FUTOMAKI...",
         noPieceName = "Il nome non può essere vuoto",
         deleteCustomPiece = "Eliminare il pezzo?",
         deleteCustomPieceConfirm = "\"%s\" verrà rimosso dai tuoi pezzi personalizzati.",
         customPiecesManage = "Gestisci pezzi personalizzati",
-        customPiecesEmpty = "Non hai ancora pezzi personalizzati"
+        customPiecesEmpty = "Non hai ancora pezzi personalizzati",
+        customPiecesLimit = "Limite di 12 pezzi personalizzati raggiunto"
     )
 
     fun get(language: AppLanguage): Strings = when (language) {
@@ -465,7 +485,7 @@ object AppStrings {
 data class CustomPiece(
     val id: String,
     val name: String,
-    val emoji: String = "🍱"
+    val emoji: String = "🍣"
 )
 
 class AppSettingsManager(context: Context) {
