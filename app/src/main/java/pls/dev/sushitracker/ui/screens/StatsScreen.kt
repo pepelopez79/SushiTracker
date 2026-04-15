@@ -1,7 +1,6 @@
 package pls.dev.sushitracker.ui.screens
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -26,9 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
-import pls.dev.sushitracker.data.AppStrings
-import pls.dev.sushitracker.data.SessionStorage
-import pls.dev.sushitracker.data.StatsFilter
+import pls.dev.sushitracker.data.*
 import pls.dev.sushitracker.ui.theme.*
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -37,12 +34,27 @@ import pls.dev.sushitracker.ui.theme.*
 fun StatsScreen(
     colors: SushiColors,
     strings: AppStrings.Strings,
+    currentLanguage: AppLanguage,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val sessionManager = remember { SessionStorage(context) }
-    val scope = rememberCoroutineScope()
+    val settingsManager = remember { AppSettingsManager(context) }
+    val customPieces = remember { settingsManager.getCustomPieces() }
     var stats by remember { mutableStateOf(sessionManager.getStats(StatsFilter.ALL)) }
+    val RICE_WEIGHTS = mapOf(
+        "nigiri" to 18,
+        "maki" to 15,
+        "onigiri" to 80,
+        "uramaki" to 25,
+        "gunkan" to 20,
+        "temaki" to 45,
+        "sashimi" to 0,
+        "gyoza" to 0,
+        "tempura" to 0,
+        "edamame" to 0,
+        "takoyaki" to 0
+    )
 
     Column(modifier = Modifier.fillMaxSize().background(colors.background)) {
         Row(
@@ -130,7 +142,6 @@ fun StatsScreen(
                         }
                     }
                 }
-
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -160,7 +171,6 @@ fun StatsScreen(
                         )
                     }
                 }
-
                 item {
                     Text(
                         strings.breakdown,
@@ -170,7 +180,6 @@ fun StatsScreen(
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 }
-
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -183,13 +192,18 @@ fun StatsScreen(
                         ) {
                             val maxPieces = stats.pieceStats.values.maxOrNull() ?: 1
                             stats.pieceStats.entries.sortedByDescending { it.value }
-                                .forEach { (type, count) ->
-                                    PieceTypeRow(type, count, maxPieces, colors)
+                                .forEach { (id, count) ->
+                                    PieceTypeRow(
+                                        id = id,
+                                        count = count,
+                                        maxCount = maxPieces,
+                                        colors = colors,
+                                        customPieces = customPieces
+                                    )
                                 }
                         }
                     }
                 }
-
                 if (stats.sessionCount > 0) {
                     item {
                         Text(
@@ -210,15 +224,26 @@ fun StatsScreen(
                                 modifier = Modifier.padding(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                CuriosityItem(
-                                    "🍚",
-                                    strings.riceApprox.format(stats.total * 20),
-                                    colors
-                                )
+                                val riceGrams = stats.pieceStats.entries.sumOf { (id, count) ->
+                                    val weight = RICE_WEIGHTS[id] ?: 18
+                                    weight * count
+                                }
+                                if (riceGrams > 0) {
+                                    CuriosityItem(
+                                        emoji = "🍚",
+                                        text = strings.riceApprox.format(riceGrams),
+                                        colors = colors
+                                    )
+                                }
                                 stats.pieceStats.maxByOrNull { it.value }?.let {
                                     CuriosityItem(
-                                        getPieceEmoji(it.key),
-                                        strings.favoritePiece.format(it.key),
+                                        getPieceEmoji(it.key, customPieces),
+                                        strings.favoritePiece.format(
+                                            getPieceName(
+                                                it.key,
+                                                customPieces
+                                            )
+                                        ),
                                         colors
                                     )
                                 }
@@ -253,12 +278,15 @@ private fun StatCard(
 }
 
 @Composable
-private fun PieceTypeRow(type: String, count: Int, maxCount: Int, colors: SushiColors) {
+private fun PieceTypeRow(
+    id: String, count: Int, maxCount: Int, colors: SushiColors,
+    customPieces: List<CustomPiece> = emptyList()
+) {
     Column {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(getPieceEmoji(type), fontSize = 20.sp)
-                Text(type.replaceFirstChar { it.uppercase() }, color = colors.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Text(getPieceEmoji(id, customPieces), fontSize = 20.sp)
+                Text(getPieceName(id, customPieces), color = colors.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Medium)
             }
             Text(count.toString(), color = colors.primary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
@@ -277,39 +305,4 @@ private fun CuriosityItem(emoji: String, text: String, colors: SushiColors) {
         }
         Text(text, color = colors.onSurface, fontSize = 14.sp)
     }
-}
-
-private fun getPieceEmoji(type: String): String = when (type.lowercase()) {
-    "nigiri" -> "🍣"; "sashimi" -> "🥢"; "maki" -> "🍙"; "temaki" -> "📜"; "gyoza" -> "🥟"; "otro" -> "🍽️"; else -> "🍱"
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@SuppressLint("DefaultLocale")
-private fun shareStats(context: android.content.Context, sessionManager: SessionStorage) {
-    val stats = sessionManager.getStats(StatsFilter.ALL)
-
-    val text = buildString {
-        appendLine("🍣 Mis estadisticas de Sushi Tracker")
-        appendLine("=====================================")
-        appendLine()
-        appendLine("📊 RESUMEN")
-        appendLine("• Total de piezas: ${stats.total}")
-        appendLine("• Sesiones completadas: ${stats.sessionCount}")
-        appendLine("• Promedio por sesion: ${String.format("%.1f", stats.avgPerSession)}")
-        appendLine("• Record personal: ${stats.maxInSession} piezas 🏆")
-        appendLine()
-        appendLine("🍱 POR TIPO")
-        stats.pieceStats.entries.sortedByDescending { it.value }.forEach { (type, count) ->
-            appendLine("${getPieceEmoji(type)} ${type.replaceFirstChar { it.uppercase() }}: $count")
-        }
-        appendLine()
-        appendLine("Registrado con Sushi Tracker 🍣")
-    }
-
-    val intent = Intent(Intent.ACTION_SEND).apply {
-        type = "text/plain"
-        putExtra(Intent.EXTRA_SUBJECT, "Mis estadisticas de Sushi Tracker")
-        putExtra(Intent.EXTRA_TEXT, text)
-    }
-    context.startActivity(Intent.createChooser(intent, "Compartir estadisticas"))
 }

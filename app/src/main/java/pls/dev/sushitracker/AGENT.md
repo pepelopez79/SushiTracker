@@ -509,16 +509,10 @@ dependencies {
 
 ## Posibles Mejoras Futuras
 
-1. **Base de datos Room**: Migrar de SharedPreferences a Room para mejor rendimiento con muchos datos
-2. **Backup en la nube**: Sincronizacion con Firebase/Supabase
-3. **Graficos**: Charts de consumo mensual/semanal
-4. **Tipos personalizables**: Permitir agregar/editar tipos de piezas
-5. **Exportar datos**: CSV o PDF con historial
-6. **Widgets**: Widget de Android con acceso rapido
-7. **Notificaciones**: Recordatorio semanal de estadisticas
-8. **Modo oscuro/claro**: Toggle de tema (actualmente solo dark)
-9. **Localizacion**: Soporte multi-idioma
-10. **Tests**: Unit tests y UI tests con Compose Testing
+1. **Backup en la nube**: Sincronizacion con Firebase/Supabase
+2. **Graficos**: Charts de consumo mensual/semanal
+3. **Widgets**: Widget de Android con acceso rapido
+4. **Notificaciones**: Recordatorio semanal de estadisticas o notificar logros completados
 
 ---
 

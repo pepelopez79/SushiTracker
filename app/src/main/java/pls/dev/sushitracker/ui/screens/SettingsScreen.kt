@@ -139,7 +139,6 @@ fun SettingsScreen(
             }
 
             item {
-                SectionLabel(strings.yourData, colors)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -234,11 +233,11 @@ private fun CustomPiecesDialog(
     onDelete: (String) -> Unit
 ) {
     var newName by remember { mutableStateOf("") }
-    var newEmoji by remember { mutableStateOf("🍱") }
+    var newEmoji by remember { mutableStateOf("🍣") }
     var showNameError by remember { mutableStateOf(false) }
     var deleteTarget by remember { mutableStateOf<CustomPiece?>(null) }
     val emojiOptions = remember {
-        listOf("🍱", "🍣", "🍙", "🥟", "🍜", "🥗", "🍤", "🍢", "🍘", "🍵",
+        listOf( "🍣", "🍱", "🐟", "🍙", "🥟", "🍜", "🥗", "🍤", "🍢", "🍘", "🍵",
             "🫔", "🥣", "🥡", "🫛", "🍚", "🥢", "🍲", "🍛", "🍶", "🍡")
             .filter { android.graphics.Paint().hasGlyph(it) }
     }
@@ -307,7 +306,7 @@ private fun CustomPiecesDialog(
                         supportingText = if (showNameError) {
                             { Text(strings.noPieceName, color = MaterialTheme.colorScheme.error, fontSize = 12.sp) }
                         } else null,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters),
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = colors.primary,
                             unfocusedBorderColor = colors.border,
@@ -353,7 +352,7 @@ private fun CustomPiecesDialog(
                             } else {
                                 onAdd(CustomPiece(id = "custom_${UUID.randomUUID()}", name = newName.trim(), emoji = newEmoji))
                                 newName = ""
-                                newEmoji = "🍱"
+                                newEmoji = "🍣"
                                 showNameError = false
                             }
                         },

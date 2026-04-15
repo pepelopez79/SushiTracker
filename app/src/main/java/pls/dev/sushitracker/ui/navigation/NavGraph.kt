@@ -70,16 +70,16 @@ fun SushiNavGraph(
 
         composable(Screen.History.route) {
             HistoryScreen(
-                colors = colors,
-                strings = strings,
+                colors = colors, strings = strings,
+                currentLanguage = currentLanguage,
                 onBack = { navController.popBackStack() }
             )
         }
 
         composable(Screen.Stats.route) {
             StatsScreen(
-                colors = colors,
-                strings = strings,
+                colors = colors, strings = strings,
+                currentLanguage = currentLanguage,
                 onBack = { navController.popBackStack() }
             )
         }

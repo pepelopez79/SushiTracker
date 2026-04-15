@@ -26,9 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import pls.dev.sushitracker.data.AppStrings
-import pls.dev.sushitracker.data.SessionRecord
-import pls.dev.sushitracker.data.SessionStorage
+import pls.dev.sushitracker.data.*
 import pls.dev.sushitracker.ui.theme.*
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -40,17 +38,19 @@ import java.time.temporal.ChronoUnit
 fun HistoryScreen(
     colors: SushiColors,
     strings: AppStrings.Strings,
+    currentLanguage: AppLanguage,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val sessionManager = remember { SessionStorage(context) }
+    val settingsManager = remember { AppSettingsManager(context) }
+    val customPieces = remember { settingsManager.getCustomPieces() }
+
     var sessions by remember { mutableStateOf(sessionManager.getSessions()) }
     var expandedSessionId by remember { mutableStateOf<String?>(null) }
     var showDeleteDialog by remember { mutableStateOf<SessionRecord?>(null) }
 
-    Column(
-        modifier = Modifier.fillMaxSize().background(colors.background)
-    ) {
+    Column(modifier = Modifier.fillMaxSize().background(colors.background)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -62,18 +62,15 @@ fun HistoryScreen(
             ) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.back, tint = colors.onSecondary, modifier = Modifier.size(20.dp))
             }
-            Text(
-                text = strings.historyTitle,
-                color = colors.onBackground,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.ExtraBold,
-                modifier = Modifier.weight(1f)
-            )
+            Text(strings.historyTitle, color = colors.onBackground, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.weight(1f))
             if (sessions.isNotEmpty()) {
-                Box(
-                    modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(colors.primary.copy(alpha = 0.2f)).padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Text("${sessions.size} ${strings.sessions}", color = colors.primary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Box(modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(colors.primary.copy(alpha = 0.2f)).padding(horizontal = 12.dp, vertical = 6.dp)) {
+                    Text(
+                        text = "${sessions.size} ${if (sessions.size == 1) strings.session else strings.sessions}",
+                        color = colors.primary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         }
@@ -98,8 +95,10 @@ fun HistoryScreen(
                         isExpanded = expandedSessionId == session.id,
                         colors = colors,
                         strings = strings,
+                        currentLanguage = currentLanguage,
+                        customPieces = customPieces,
                         onToggleExpand = { expandedSessionId = if (expandedSessionId == session.id) null else session.id },
-                        onShare = { shareSession(context, session, strings) },
+                        onShare = { shareSession(context, session, strings, currentLanguage, customPieces) },
                         onDelete = { showDeleteDialog = session }
                     )
                 }
@@ -134,17 +133,15 @@ private fun SessionHistoryCard(
     isExpanded: Boolean,
     colors: SushiColors,
     strings: AppStrings.Strings,
+    currentLanguage: AppLanguage,
+    customPieces: List<CustomPiece>,
     onToggleExpand: () -> Unit,
     onShare: () -> Unit,
     onDelete: () -> Unit
 ) {
     val totalPieces = session.totalPieces
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = colors.surface)
-    ) {
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = colors.surface)) {
         Column {
             Row(
                 modifier = Modifier.fillMaxWidth().clickable(onClick = onToggleExpand).padding(16.dp),
@@ -152,15 +149,13 @@ private fun SessionHistoryCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(when { totalPieces >= 50 -> colors.primary.copy(alpha = 0.2f); totalPieces >= 30 -> colors.primary.copy(alpha = 0.2f); else -> colors.secondary }),
+                    modifier = Modifier.size(48.dp).clip(CircleShape)
+                        .background(when { totalPieces >= 50 -> colors.primary.copy(alpha = 0.25f); totalPieces >= 30 -> colors.primary.copy(alpha = 0.15f); else -> colors.secondary }),
                     contentAlignment = Alignment.Center
                 ) { Text("🍣", fontSize = 24.sp) }
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(formatDate(session.date), color = colors.onSurface, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(formatDateLocalized(session.date, currentLanguage), color = colors.onSurface, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     Text(session.restaurant, color = colors.mutedForeground, fontSize = 12.sp)
                     Text(getRelativeDate(session.date, strings), color = colors.mutedForeground, fontSize = 11.sp)
                 }
@@ -169,17 +164,14 @@ private fun SessionHistoryCard(
                     Text(
                         text = totalPieces.toString(),
                         color = when { totalPieces >= 50 -> colors.primary; totalPieces >= 30 -> colors.primary; else -> colors.onSurface },
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontSize = 24.sp, fontWeight = FontWeight.ExtraBold
                     )
                     Text(strings.pieces, color = colors.mutedForeground, fontSize = 11.sp)
                 }
 
                 Icon(
                     imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                    contentDescription = null,
-                    tint = colors.mutedForeground,
-                    modifier = Modifier.size(24.dp)
+                    contentDescription = null, tint = colors.mutedForeground, modifier = Modifier.size(24.dp)
                 )
             }
 
@@ -187,35 +179,23 @@ private fun SessionHistoryCard(
                 Column {
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = colors.border)
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        session.pieces.filter { it.value > 0 }.forEach { (key, value) ->
+                        session.pieces.filter { it.value > 0 }.forEach { (id, count) ->
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Text(getPieceEmoji(key), fontSize = 16.sp)
-                                    Text(key.replaceFirstChar { it.uppercase() }, color = colors.onSurface, fontSize = 14.sp)
+                                    Text(getPieceEmoji(id, customPieces), fontSize = 16.sp)
+                                    Text(getPieceName(id, customPieces), color = colors.onSurface, fontSize = 14.sp)
                                 }
-                                Text("$value", color = colors.primary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                Text("$count", color = colors.primary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = onShare,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.primary)
-                        ) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = onShare, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.primary)) {
                             Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(strings.share, fontSize = 13.sp)
                         }
-                        OutlinedButton(
-                            onClick = onDelete,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
+                        OutlinedButton(onClick = onDelete, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)) {
                             Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(strings.delete, fontSize = 13.sp)
@@ -227,17 +207,22 @@ private fun SessionHistoryCard(
     }
 }
 
-private fun getPieceEmoji(type: String): String = when (type.lowercase()) {
-    "nigiri" -> "🍣"; "sashimi" -> "🥢"; "maki" -> "🍙"; "temaki" -> "📜"; "gyoza" -> "🥟"; "otro" -> "🍽️"; else -> "🍱"
-}
-
 @RequiresApi(Build.VERSION_CODES.O)
-internal fun formatDate(dateString: String): String {
+internal fun formatDateLocalized(dateString: String, language: AppLanguage): String {
     return try {
         val date = try {
             LocalDateTime.parse(dateString, DateTimeFormatter.ISO_DATE_TIME).toLocalDate()
         } catch (e: Exception) { LocalDate.parse(dateString) }
-        date.format(DateTimeFormatter.ofPattern("d 'de' MMMM, yyyy", java.util.Locale("es", "ES")))
+
+        val months = AppStrings.monthNames[language] ?: AppStrings.monthNames[AppLanguage.ENGLISH]!!
+        val month = months[date.monthValue - 1]
+
+        when (language) {
+            AppLanguage.SPANISH -> "${date.dayOfMonth} de $month, ${date.year}"
+            AppLanguage.ENGLISH -> "${date.dayOfMonth} $month ${date.year}"
+            AppLanguage.FRENCH  -> "${date.dayOfMonth} $month ${date.year}"
+            AppLanguage.ITALIAN -> "${date.dayOfMonth} $month ${date.year}"
+        }
     } catch (e: Exception) { dateString }
 }
 
@@ -247,35 +232,41 @@ private fun getRelativeDate(dateString: String, strings: AppStrings.Strings): St
         val date = try {
             LocalDateTime.parse(dateString, DateTimeFormatter.ISO_DATE_TIME).toLocalDate()
         } catch (e: Exception) { LocalDate.parse(dateString) }
-        val daysBetween = ChronoUnit.DAYS.between(date, LocalDate.now())
+        val days = ChronoUnit.DAYS.between(date, LocalDate.now())
         when {
-            daysBetween == 0L -> strings.today
-            daysBetween == 1L -> strings.yesterday
-            daysBetween < 7 -> strings.daysAgo.format(daysBetween)
-            daysBetween < 30 -> strings.weeksAgo.format(daysBetween / 7)
-            else -> strings.monthsAgo.format(daysBetween / 30)
+            days == 0L -> strings.today
+            days == 1L -> strings.yesterday
+            days < 7   -> strings.daysAgo.format(days)
+            days < 30  -> strings.weeksAgo.format(days / 7)
+            else       -> strings.monthsAgo.format(days / 30)
         }
     } catch (e: Exception) { "" }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-private fun shareSession(context: android.content.Context, session: SessionRecord, strings: AppStrings.Strings) {
+private fun shareSession(
+    context: android.content.Context,
+    session: SessionRecord,
+    strings: AppStrings.Strings,
+    language: AppLanguage,
+    customPieces: List<CustomPiece>
+) {
     val text = buildString {
         appendLine("🍣 ${strings.newSession}")
-        appendLine("📅 ${formatDate(session.date)}")
+        appendLine("📅 ${formatDateLocalized(session.date, language)}")
         appendLine("🏠 ${session.restaurant}")
         appendLine()
         appendLine("${strings.total}: ${session.totalPieces} ${strings.pieces}")
         appendLine()
-        session.pieces.filter { it.value > 0 }.forEach { (key, value) ->
-            appendLine("${getPieceEmoji(key)} ${key.replaceFirstChar { it.uppercase() }}: $value")
+        session.pieces.filter { it.value > 0 }.forEach { (id, count) ->
+            appendLine("${getPieceEmoji(id, customPieces)} ${getPieceName(id, customPieces)}: $count")
         }
         appendLine()
         appendLine("Sushi Tracker 🍣")
     }
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
-        putExtra(Intent.EXTRA_SUBJECT, "Sushi Tracker - ${formatDate(session.date)}")
+        putExtra(Intent.EXTRA_SUBJECT, "Sushi Tracker - ${formatDateLocalized(session.date, language)}")
         putExtra(Intent.EXTRA_TEXT, text)
     }
     context.startActivity(Intent.createChooser(intent, strings.share))
