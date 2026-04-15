@@ -29,14 +29,10 @@
  * │   │   │   ├── SessionDetailScreen.kt
  * │   │   │   └── StatsScreen.kt
  * │   │   ├── components/
- * │   │   │   ├── ExportDialog.kt
- * │   │   │   ├── ShareDialog.kt
+ * │   │   │   ├── CustomPieceCounterItem.kt
  * │   │   │   └── PieceCounterItem.kt
  * │   │   └── navigation/
  * │   │       └── NavGraph.kt
- * │   ├── utils/
- * │   │   ├── ExportUtils.kt
- * │   │   └── ShareUtils.kt
  * │   ├── AGENT.md
  * │   ├── ASSETS_GUIDE.md
  * │   └── MainActivity.kt

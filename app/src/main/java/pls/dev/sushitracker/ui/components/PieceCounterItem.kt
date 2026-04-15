@@ -32,6 +32,7 @@ import kotlinx.coroutines.*
 fun PieceCounterItem(
     piece: SushiPiece,
     count: Int,
+    colors: SushiColors,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit
 ) {
@@ -63,7 +64,7 @@ fun PieceCounterItem(
             .fillMaxWidth()
             .shadow(4.dp, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
-            .background(if (isPressing) Color(0xFFF0F0F0) else ItemBackground)
+            .background(if (isPressing) colors.secondary else colors.surface)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
@@ -114,7 +115,7 @@ fun PieceCounterItem(
 
         Text(
             text = piece.name.uppercase(),
-            color = ItemForeground,
+            color = colors.onSurface,
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
             maxLines = 1,

@@ -1,6 +1,8 @@
 package pls.dev.sushitracker.ui.screens
 
+import android.app.Activity
 import android.os.Build
+import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -19,12 +21,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pls.dev.sushitracker.data.*
 import pls.dev.sushitracker.ui.components.CustomPieceCounterItem
 import pls.dev.sushitracker.ui.components.PieceCounterItem
 import pls.dev.sushitracker.ui.theme.*
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 enum class CounterPhase { RESTAURANT_INPUT, COUNTING, CONFIRM_SAVE }
@@ -37,6 +42,15 @@ fun CounterScreen(
     strings: AppStrings.Strings
 ) {
     val context = LocalContext.current
+
+    DisposableEffect(Unit) {
+        val activity = context as? Activity
+        activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        onDispose {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+
     val storage = remember { SessionStorage(context) }
     val settingsManager = remember { AppSettingsManager(context) }
     val customPieces = remember { settingsManager.getCustomPieces() }
@@ -54,12 +68,16 @@ fun CounterScreen(
 
     val totalPieces = counts.values.sum()
 
-    BackHandler(enabled = true) {
+    val handleBackAction = {
         if (phase != CounterPhase.RESTAURANT_INPUT && totalPieces > 0) {
             showExitDialog = true
         } else {
             onBack()
         }
+    }
+
+    BackHandler(enabled = true) {
+        handleBackAction()
     }
 
     if (showExitDialog) {
@@ -95,24 +113,45 @@ fun CounterScreen(
     when (phase) {
         CounterPhase.RESTAURANT_INPUT -> {
             Box(
-                modifier = Modifier.fillMaxSize().background(colors.background),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(colors.background),
                 contentAlignment = Alignment.Center
             ) {
                 Card(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = colors.surface)
                 ) {
-                    Column(modifier = Modifier.padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(strings.newSession, color = colors.onSurface, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+                    Column(
+                        modifier = Modifier.padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            strings.newSession,
+                            color = colors.onSurface,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(strings.whereAreYouEating, color = colors.mutedForeground, fontSize = 14.sp)
+                        Text(
+                            strings.whereAreYouEating,
+                            color = colors.mutedForeground,
+                            fontSize = 14.sp
+                        )
                         Spacer(modifier = Modifier.height(24.dp))
 
                         OutlinedTextField(
                             value = restaurant,
                             onValueChange = { restaurant = it },
-                            placeholder = { Text(strings.restaurantName, color = colors.mutedForeground) },
+                            placeholder = {
+                                Text(
+                                    strings.restaurantName,
+                                    color = colors.mutedForeground
+                                )
+                            },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = colors.primary,
                                 unfocusedBorderColor = colors.border,
@@ -126,18 +165,31 @@ fun CounterScreen(
                         )
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
                             Button(
                                 onClick = onBack,
-                                colors = ButtonDefaults.buttonColors(containerColor = colors.secondary, contentColor = colors.onSecondary),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colors.secondary,
+                                    contentColor = colors.onSecondary
+                                ),
                                 shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.weight(1f).height(48.dp)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
                             ) { Text(strings.cancel, fontWeight = FontWeight.Bold) }
                             Button(
                                 onClick = { phase = CounterPhase.COUNTING },
-                                colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colors.primary,
+                                    contentColor = colors.onPrimary
+                                ),
                                 shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.weight(1f).height(48.dp)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
                             ) { Text(strings.start, fontWeight = FontWeight.Bold) }
                         }
                     }
@@ -146,18 +198,30 @@ fun CounterScreen(
         }
 
         CounterPhase.COUNTING -> {
-            Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .background(colors.background)) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         IconButton(
-                            onClick = onBack,
-                            modifier = Modifier.size(40.dp).clip(CircleShape).background(colors.secondary)
+                            onClick = { handleBackAction() },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(colors.secondary)
                         ) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.back, tint = colors.onSecondary, modifier = Modifier.size(20.dp))
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = strings.back,
+                                tint = colors.onSecondary,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                         Text(
                             text = restaurant.ifEmpty { strings.noName },
@@ -167,17 +231,32 @@ fun CounterScreen(
                             modifier = Modifier.weight(1f)
                         )
                         Box(
-                            modifier = Modifier.clip(RoundedCornerShape(50)).background(colors.primary.copy(alpha = 0.2f)).padding(horizontal = 12.dp, vertical = 4.dp)
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(colors.primary.copy(alpha = 0.2f))
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("${strings.total}: ", color = colors.primary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                                Text("$totalPieces", color = colors.primary, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
+                                Text(
+                                    "${strings.total}: ",
+                                    color = colors.primary,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    "$totalPieces",
+                                    color = colors.primary,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.ExtraBold
+                                )
                             }
                         }
                     }
 
                     LazyColumn(
-                        modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         contentPadding = PaddingValues(bottom = 96.dp, top = 8.dp)
                     ) {
@@ -185,19 +264,29 @@ fun CounterScreen(
                             PieceCounterItem(
                                 piece = piece,
                                 count = counts[piece.id] ?: 0,
-                                onIncrement = { counts = counts.toMutableMap().apply { this[piece.id] = (this[piece.id] ?: 0) + 1 } },
-                                onDecrement = { counts = counts.toMutableMap().apply { this[piece.id] = maxOf(0, (this[piece.id] ?: 0) - 1) } }
+                                colors = colors,
+                                onIncrement = {
+                                    counts = counts.toMutableMap()
+                                        .apply { this[piece.id] = (this[piece.id] ?: 0) + 1 }
+                                },
+                                onDecrement = {
+                                    counts = counts.toMutableMap().apply {
+                                        this[piece.id] = maxOf(0, (this[piece.id] ?: 0) - 1)
+                                    }
+                                }
                             )
                         }
                         if (customPieces.isNotEmpty()) {
                             item {
                                 Text(
-                                    text = "— Personalizadas —",
+                                    text = "— " + strings.customPieces + " —",
                                     color = colors.mutedForeground,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    textAlign = TextAlign.Center
                                 )
                             }
                             items(customPieces) { piece ->
@@ -205,8 +294,15 @@ fun CounterScreen(
                                     piece = piece,
                                     count = counts[piece.id] ?: 0,
                                     colors = colors,
-                                    onIncrement = { counts = counts.toMutableMap().apply { this[piece.id] = (this[piece.id] ?: 0) + 1 } },
-                                    onDecrement = { counts = counts.toMutableMap().apply { this[piece.id] = maxOf(0, (this[piece.id] ?: 0) - 1) } }
+                                    onIncrement = {
+                                        counts = counts.toMutableMap()
+                                            .apply { this[piece.id] = (this[piece.id] ?: 0) + 1 }
+                                    },
+                                    onDecrement = {
+                                        counts = counts.toMutableMap().apply {
+                                            this[piece.id] = maxOf(0, (this[piece.id] ?: 0) - 1)
+                                        }
+                                    }
                                 )
                             }
                         }
@@ -214,17 +310,30 @@ fun CounterScreen(
                 }
 
                 Box(
-                    modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(colors.background.copy(alpha = 0.95f)).padding(16.dp)
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .background(colors.background.copy(alpha = 0.95f))
+                        .padding(16.dp)
                 ) {
                     Button(
                         onClick = { phase = CounterPhase.CONFIRM_SAVE },
-                        colors = ButtonDefaults.buttonColors(containerColor = colors.secondary, contentColor = colors.onSecondary),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colors.secondary,
+                            contentColor = colors.onSecondary
+                        ),
                         shape = RoundedCornerShape(50),
-                        modifier = Modifier.fillMaxWidth().height(56.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
                     ) {
                         Text(strings.endSession, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Icon(
+                            Icons.Filled.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
             }
@@ -232,33 +341,59 @@ fun CounterScreen(
 
         CounterPhase.CONFIRM_SAVE -> {
             Box(
-                modifier = Modifier.fillMaxSize().background(colors.background),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(colors.background),
                 contentAlignment = Alignment.Center
             ) {
                 Card(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = colors.surface)
                 ) {
-                    Column(modifier = Modifier.padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(strings.finishSession, color = colors.onSurface, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+                    Column(
+                        modifier = Modifier.padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            strings.finishSession,
+                            color = colors.onSurface,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("$totalPieces", color = colors.primary, fontSize = 48.sp, fontWeight = FontWeight.ExtraBold)
+                        Text(
+                            "$totalPieces",
+                            color = colors.primary,
+                            fontSize = 48.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
                         Text(strings.totalPieces, color = colors.mutedForeground, fontSize = 14.sp)
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
                             Button(
                                 onClick = { phase = CounterPhase.COUNTING },
-                                colors = ButtonDefaults.buttonColors(containerColor = colors.secondary, contentColor = colors.onSecondary),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colors.secondary,
+                                    contentColor = colors.onSecondary
+                                ),
                                 shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.weight(1f).height(48.dp)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
                             ) { Text(strings.continueStr, fontWeight = FontWeight.Bold) }
                             Button(
                                 onClick = {
                                     val session = SessionRecord(
                                         id = UUID.randomUUID().toString(),
-                                        date = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME),
+                                        date = LocalDateTime.now()
+                                            .format(DateTimeFormatter.ISO_DATE_TIME),
                                         restaurant = restaurant.ifEmpty { strings.noName },
                                         pieces = counts,
                                         totalPieces = totalPieces
@@ -266,9 +401,14 @@ fun CounterScreen(
                                     storage.saveSession(session)
                                     onBack()
                                 },
-                                colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colors.primary,
+                                    contentColor = colors.onPrimary
+                                ),
                                 shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.weight(1f).height(48.dp)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
                             ) { Text(strings.save, fontWeight = FontWeight.Bold) }
                         }
                     }

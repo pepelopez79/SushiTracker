@@ -25,10 +25,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 import pls.dev.sushitracker.data.*
 import pls.dev.sushitracker.ui.theme.*
-import pls.dev.sushitracker.utils.ExportUtils
 import java.util.UUID
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -46,10 +44,8 @@ fun SettingsScreen(
     val context = LocalContext.current
     val settingsManager = remember { AppSettingsManager(context) }
     val sessionManager = remember { SessionStorage(context) }
-    val scope = rememberCoroutineScope()
 
     var showResetDialog by remember { mutableStateOf(false) }
-    var showExportDialog by remember { mutableStateOf(false) }
     var showCustomPiecesDialog by remember { mutableStateOf(false) }
     var customPieces by remember { mutableStateOf(settingsManager.getCustomPieces()) }
 
@@ -90,7 +86,6 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
-            // ── APARIENCIA
             item {
                 SectionLabel(strings.appearance, colors)
                 Card(
@@ -116,7 +111,6 @@ fun SettingsScreen(
                 }
             }
 
-            // ── IDIOMA
             item {
                 SectionLabel(strings.language, colors)
                 Card(
@@ -140,7 +134,6 @@ fun SettingsScreen(
                 }
             }
 
-            // ── TUS DATOS
             item {
                 SectionLabel(strings.yourData, colors)
                 Card(
@@ -149,14 +142,6 @@ fun SettingsScreen(
                     colors = CardDefaults.cardColors(containerColor = colors.surface)
                 ) {
                     Column {
-                        SettingsItem(
-                            icon = Icons.Filled.Share,
-                            title = strings.exportStats,
-                            subtitle = strings.exportStatsSubtitle,
-                            colors = colors,
-                            onClick = { showExportDialog = true }
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = colors.border)
                         SettingsItem(
                             icon = Icons.Filled.Add,
                             title = strings.customPiecesManage,
@@ -177,7 +162,6 @@ fun SettingsScreen(
                 }
             }
 
-            // ── INFORMACIÓN
             item {
                 SectionLabel(strings.information, colors)
                 Card(
@@ -217,46 +201,6 @@ fun SettingsScreen(
         )
     }
 
-    if (showExportDialog) {
-        ExportOptionsDialog(
-            colors = colors,
-            strings = strings,
-            onDismiss = { showExportDialog = false },
-            onExportPdf = {
-                showExportDialog = false
-                scope.launch {
-                    val s = sessionManager.getStats(StatsFilter.ALL)
-                    val uri = ExportUtils.exportStatsToPdf(context, s.pieceStats, s.total, StatsFilter.ALL, sessionManager.getSessions())
-                    uri?.let { ExportUtils.openFile(context, it, "application/pdf") }
-                }
-            },
-            onExportExcel = {
-                showExportDialog = false
-                scope.launch {
-                    val s = sessionManager.getStats(StatsFilter.ALL)
-                    val uri = ExportUtils.exportStatsToExcel(context, s.pieceStats, s.total, StatsFilter.ALL, sessionManager.getSessions())
-                    uri?.let { ExportUtils.openFile(context, it, "text/csv") }
-                }
-            },
-            onSharePdf = {
-                showExportDialog = false
-                scope.launch {
-                    val s = sessionManager.getStats(StatsFilter.ALL)
-                    val uri = ExportUtils.exportStatsToPdf(context, s.pieceStats, s.total, StatsFilter.ALL, sessionManager.getSessions())
-                    uri?.let { ExportUtils.shareFile(context, it, "application/pdf", strings.exportShare) }
-                }
-            },
-            onShareExcel = {
-                showExportDialog = false
-                scope.launch {
-                    val s = sessionManager.getStats(StatsFilter.ALL)
-                    val uri = ExportUtils.exportStatsToExcel(context, s.pieceStats, s.total, StatsFilter.ALL, sessionManager.getSessions())
-                    uri?.let { ExportUtils.shareFile(context, it, "text/csv", strings.exportShare) }
-                }
-            }
-        )
-    }
-
     if (showCustomPiecesDialog) {
         CustomPiecesDialog(
             colors = colors,
@@ -272,63 +216,6 @@ fun SettingsScreen(
                 customPieces = settingsManager.getCustomPieces()
             }
         )
-    }
-}
-
-@Composable
-private fun ExportOptionsDialog(
-    colors: SushiColors,
-    strings: AppStrings.Strings,
-    onDismiss: () -> Unit,
-    onExportPdf: () -> Unit,
-    onExportExcel: () -> Unit,
-    onSharePdf: () -> Unit,
-    onShareExcel: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = colors.surface,
-        title = { Text(strings.exportTitle, color = colors.onSurface, fontWeight = FontWeight.Bold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(strings.exportSelectFormat, color = colors.mutedForeground)
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ExportBtn(Icons.Filled.Edit, strings.exportPdf, "Abrir", colors, onExportPdf, Modifier.weight(1f))
-                    ExportBtn(Icons.Filled.Check, strings.exportExcel, "Abrir", colors, onExportExcel, Modifier.weight(1f))
-                }
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ExportBtn(Icons.Filled.Share, strings.exportPdf, strings.exportShare, colors, onSharePdf, Modifier.weight(1f))
-                    ExportBtn(Icons.Filled.Share, strings.exportExcel, strings.exportShare, colors, onShareExcel, Modifier.weight(1f))
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text(strings.cancel, color = colors.mutedForeground) } }
-    )
-}
-
-@Composable
-private fun ExportBtn(
-    icon: ImageVector, label: String, sublabel: String,
-    colors: SushiColors, onClick: () -> Unit, modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(colors.secondary)
-            .clickable(onClick = onClick)
-            .padding(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
-            modifier = Modifier.size(44.dp).clip(CircleShape).background(colors.primary),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, contentDescription = label, tint = colors.onPrimary, modifier = Modifier.size(22.dp))
-        }
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(label, color = colors.onSurface, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-        Text(sublabel, color = colors.mutedForeground, fontSize = 10.sp)
     }
 }
 
@@ -436,7 +323,7 @@ private fun CustomPiecesDialog(
             }
         },
         confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text(strings.cancel, color = colors.mutedForeground) } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(strings.back, color = colors.mutedForeground) } }
     )
 
     deleteTarget?.let { piece ->

@@ -72,7 +72,7 @@ fun AchievementsScreen(
                 )
             }
             Text(
-                text = "Logros",
+                text = strings.achievements,
                 color = colors.onBackground,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold,
@@ -111,7 +111,7 @@ fun AchievementsScreen(
                     fontWeight = FontWeight.ExtraBold
                 )
                 Text(
-                    text = "logros completados",
+                    text = strings.achievementsUnlocked,
                     color = colors.mutedForeground,
                     fontSize = 14.sp
                 )
